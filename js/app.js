@@ -14,12 +14,12 @@ let wardrobe = store.get("mm-wardrobe", null);
 /* Version 3: new demo wardrobe with photos (5 shirts, 5 pants, 5 shoes and 3 of each accessory).
    Pieces you added yourself (ids starting with "u") are kept. */
 if(!wardrobe) wardrobe = DEFAULT_WARDROBE.map(x => ({...x}));
-else if(store.get("mm-wardrobe-v", 1) < 3){
+else if(store.get("mm-wardrobe-v", 1) < 4){
   wardrobe = [...wardrobe.filter(x => String(x.id).startsWith("u")), ...DEFAULT_WARDROBE.map(x => ({...x}))];
   store.set("mm-wardrobe", wardrobe);
   try { localStorage.removeItem("mm-board"); localStorage.removeItem("mm-saved"); } catch(e){}
 }
-store.set("mm-wardrobe-v", 3);
+store.set("mm-wardrobe-v", 4);
 const PROFILE_DEFAULTS = {name:"Guest", age:"22", prefs:["Casual"], height:"175", weight:"70", shirt:"M", pantWaist:"W32", pantLength:"L32", shoe:"42"};
 let profile = store.get("mm-profile", {name:"", age:"", city:"", style:"Casual", colors:["black","white"], skin:""});
 /* Fill default values into any of these fields that are still empty */
@@ -946,7 +946,7 @@ function itemEditHTML(it){
       <div class="field-pair">
         <div class="field"><label for="e-group">Category</label><select id="e-group">${groupOptions(gid)}</select></div>
         <div class="field"><label for="e-style">Clothing type</label><select id="e-style">${styleOptions(gid, it.style)}</select></div>
-        <div class="field"><label for="e-brand">Brand</label><input id="e-brand" value="${v(it.brand)}" placeholder="e.g. H&amp;M" autocomplete="off"></div>
+        <div class="field"><label for="e-brand">Brand</label><input id="e-brand" value="${v(it.brand)}" placeholder="e.g. Basico" autocomplete="off"></div>
         <div class="field"><label for="e-size">Size</label><input id="e-size" list="size-list" value="${v(it.size)}" placeholder="e.g. M" autocomplete="off"></div>
         <div class="field"><label for="e-material">Material</label><input id="e-material" list="material-list" value="${v(it.material)}" placeholder="e.g. Cotton" autocomplete="off"></div>
         <div class="field"><label for="e-tone">Colour</label><select id="e-tone">${toneOptions(it.tone)}</select></div>
@@ -1313,7 +1313,7 @@ function renderProduct(id){
 
         <div class="pd-actions">
           <button type="button" class="btn-dark" data-pd-bag>${icon("bag")} Add to Bag</button>
-          <button type="button" class="btn-outline" data-partner>View on Partner Shop ${icon("ext")}</button>
+          <button type="button" class="btn-outline" data-partner>Demo shop (not a real store) ${icon("ext")}</button>
         </div>
         <p class="pd-try"><button type="button" class="link" data-pd-try>Try it on your Outfit Board</button></p>
       </div>
@@ -1324,7 +1324,7 @@ $("#product-body").addEventListener("click", e => {
   const t = e.target.closest("[data-tone]"); if(t){ pd.tone = t.dataset.tone; renderProduct(p.id); return; }
   const s = e.target.closest("[data-size]"); if(s){ pd.size = s.dataset.size; renderProduct(p.id); return; }
   if(e.target.closest("[data-size-guide]")){ openSizeGuide(p); return; }
-  if(e.target.closest("[data-partner]")){ toast(`${p.shop} is a placeholder shop in this prototype`); return; }
+  if(e.target.closest("[data-partner]")){ toast(`This is a demo shop. Nothing is sold in this prototype.`); return; }
   if(e.target.closest("[data-pd-bag]")){ addToBag(p, pd.tone, pd.size); return; }
   if(e.target.closest("[data-pd-try]")){
     const v = {...p, tone:pd.tone};
@@ -1372,8 +1372,8 @@ function renderBag(){
       </li>`).join("")}</ul>
       <div class="bag-total"><span>Total</span><span>€${total.toFixed(2)}</span></div>
       <div class="bag-foot">
-        <button type="button" class="btn-dark" data-checkout>Continue to partner shops</button>
-        <p class="muted small" style="text-align:center;margin:0">You pay on each partner shop's own website.</p>
+        <button type="button" class="btn-dark" data-checkout>Demo only – no checkout</button>
+        <p class="muted small" style="text-align:center;margin:0">This is a student prototype. Nothing is sold and no payment is taken.</p>
       </div>`
     : `<div style="padding:24px 20px"><p class="empty">Your bag is empty.</p><p style="text-align:center;margin-top:14px"><a class="btn-dark" href="#shop" data-close>Browse the Shop</a></p></div>`}`;
 }
@@ -1384,7 +1384,7 @@ $("#bag-dialog").addEventListener("click", e => {
   if(e.target === $("#bag-dialog")){ $("#bag-dialog").close(); return; }
   const r = e.target.closest("[data-unbag]");
   if(r){ bag = bag.filter(b => b.key !== r.dataset.unbag); store.set("mm-bag", bag); updateBagCount(); renderBag(); return; }
-  if(e.target.closest("[data-checkout]")) toast("Partner shops are placeholders in this prototype");
+  if(e.target.closest("[data-checkout]")) toast("Demo only – nothing is sold in this prototype");
 });
 
 
@@ -1659,7 +1659,7 @@ $("#ask-go").addEventListener("click", () => {
 });
 $("#reset").addEventListener("click", () => {
   if(!confirm("Reset your wardrobe and profile to the demo data?")) return;
-  try { localStorage.removeItem("mm-wardrobe"); localStorage.removeItem("mm-profile"); } catch(e){}
+  try { localStorage.removeItem("mm-wardrobe"); localStorage.removeItem("mm-profile"); localStorage.removeItem("mm-bag"); } catch(e){}
   location.reload();
 });
 

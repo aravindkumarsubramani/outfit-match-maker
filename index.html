@@ -3,14 +3,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Outfit Match-maker</title>
+<title>Outfit Match-maker – student prototype</title>
+<meta name="description" content="Outfit Match-maker is a student entrepreneurship prototype that suggests outfits from a demo wardrobe. Demo data only: no accounts, no payments, nothing is sent to a server.">
 <link rel="icon" type="image/png" href="img/logo-mark.png">
 <link rel="apple-touch-icon" href="img/logo-mark.png">
 <meta name="theme-color" content="#fbfaff">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=17">
+<link rel="stylesheet" href="css/style.css?v=19">
 </head>
 <body>
 
@@ -74,6 +75,7 @@
   </defs>
 </svg>
 
+<div class="proto-note" role="note">Student prototype · demo only. Brands and shops are made up, nothing is sold, and no data leaves your browser.</div>
 <div class="app">
 
   <!-- Top bar -->
@@ -269,7 +271,7 @@
     <!-- SHOP -->
     <section class="page" id="page-shop" hidden>
       <h1>Shop</h1>
-      <p class="lead">Clothing recommendations from our partner shops</p>
+      <p class="lead">Clothing recommendations from demo shops</p>
 
       <div class="shop-search" id="shop-search" hidden>
         <svg class="i"><use href="#i-search"/></svg>
@@ -339,7 +341,7 @@
         </div>
         <div class="prow" id="complete-items"></div>
       </div>
-      <p class="muted small note">Sample products for the prototype. Prices and shops are placeholders.</p>
+      <p class="muted small note">Student prototype: sample products, made-up brands and demo shops. Nothing is sold and nothing leaves your browser.</p>
     </section>
 
     <!-- PRODUCT -->
@@ -449,7 +451,7 @@
       <div class="field"><label for="a-style">Clothing type</label><select id="a-style"></select></div>
     </div>
     <div class="field-pair">
-      <div class="field"><label for="a-brand">Brand</label><input id="a-brand" placeholder="e.g. Uniqlo" autocomplete="off"></div>
+      <div class="field"><label for="a-brand">Brand</label><input id="a-brand" placeholder="e.g. Basico" autocomplete="off"></div>
       <div class="field"><label for="a-size">Size</label><input id="a-size" list="size-list" placeholder="e.g. M" autocomplete="off"></div>
       <div class="field"><label for="a-price">Price (€)</label><input id="a-price" inputmode="decimal" placeholder="e.g. 29.95" autocomplete="off"></div>
       <div class="field"><label for="a-material">Material</label><input id="a-material" list="material-list" placeholder="e.g. Cotton" autocomplete="off"></div>
@@ -526,7 +528,7 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/data.js?v=17"></script>
-<script src="js/app.js?v=17"></script>
+<script src="js/data.js?v=19"></script>
+<script src="js/app.js?v=19"></script>
 </body>
 </html>
