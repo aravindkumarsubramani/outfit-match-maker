@@ -1,0 +1,6 @@
+# Only the website is published. Keep these on this Mac.
+android-app/
+*.apk
+Logo.png
+.claude/
+.DS_Store

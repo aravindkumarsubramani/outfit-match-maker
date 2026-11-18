@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Outfit Match-maker</title>
+<link rel="icon" type="image/png" href="img/logo-mark.png">
+<link rel="apple-touch-icon" href="img/logo-mark.png">
+<meta name="theme-color" content="#fbfaff">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css?v=17">
+</head>
+<body>
+
+<!-- Icon set (used everywhere with <use href="#i-name">) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 3.5l8.5 7V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1Z"/></symbol>
+    <symbol id="i-wardrobe" viewBox="0 0 24 24"><path d="M8.5 3h7l4.5 4v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7Z"/><path d="M8.5 3 12 8l3.5-5M12 8v13M7.5 13h2M14.5 13h2"/></symbol>
+    <symbol id="i-hanger" viewBox="0 0 24 24"><path d="M10 6.5a2 2 0 1 1 3 1.7c-.6.4-1 .9-1 1.6v.7"/><path d="M12 10.5 3.6 16.3c-.9.6-.5 1.7.5 1.7h15.8c1 0 1.4-1.1.5-1.7Z"/></symbol>
+    <symbol id="i-bag" viewBox="0 0 24 24"><path d="M5 8h14l-1.2 12.1a1 1 0 0 1-1 .9H7.2a1 1 0 0 1-1-.9Z"/><path d="M9 10V7a3 3 0 0 1 6 0v3"/></symbol>
+    <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.4-4 4.2-6 7.5-6s6.1 2 7.5 6"/></symbol>
+    <symbol id="i-bell" viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15Z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M20 12H4M10 6l-6 6 6 6"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5"/><path d="M5 12v8h14v-8"/></symbol>
+    <symbol id="i-ext" viewBox="0 0 24 24"><path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12.5 4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 20.3s-7.6-4.6-9.4-9.3C1.3 7.7 3.4 4.3 6.9 4.3c2 0 3.6 1.1 5.1 3 1.5-1.9 3.1-3 5.1-3 3.5 0 5.6 3.4 4.3 6.7-1.8 4.7-9.4 9.3-9.4 9.3Z"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M10 3.5 11.8 9 17 10.8 11.8 12.6 10 18l-1.8-5.4L3 10.8 8.2 9Z"/><path d="M18.5 3v4M16.5 5h4M18 16v3M16.5 17.5h3"/></symbol>
+    <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4"/></symbol>
+    <symbol id="i-ruler" viewBox="0 0 24 24"><path d="M3.5 16.5 16.5 3.5l4 4-13 13Z"/><path d="m7.5 12.5 2 2M10.5 9.5l2 2M13.5 6.5l2 2"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16Z"/><path d="m13.5 6.5 4 4"/></symbol>
+    <!-- occasions -->
+    <symbol id="i-college" viewBox="0 0 24 24"><path d="M2.5 9 12 4.5 21.5 9 12 13.5Z"/><path d="M6.5 11v4.5c1.5 1.5 3.4 2.2 5.5 2.2s4-.7 5.5-2.2V11M21.5 9v5"/></symbol>
+    <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 20.5h16M6.5 20.5v-6M10.5 20.5V8M14.5 20.5v-9M18.5 20.5V4.5"/></symbol>
+    <symbol id="i-party" viewBox="0 0 24 24"><path d="M4.5 4h15L12 12.5Z"/><path d="M12 12.5V20M8 20.5h8M15 4l3-2"/></symbol>
+    <symbol id="i-interview" viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2.5"/><path d="M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M3 13h18M11 13v2h2v-2"/></symbol>
+    <symbol id="i-date" viewBox="0 0 24 24"><path d="M12 20.3s-7.6-4.6-9.4-9.3C1.3 7.7 3.4 4.3 6.9 4.3c2 0 3.6 1.1 5.1 3 1.5-1.9 3.1-3 5.1-3 3.5 0 5.6 3.4 4.3 6.7-1.8 4.7-9.4 9.3-9.4 9.3Z"/></symbol>
+    <symbol id="i-travel" viewBox="0 0 24 24"><path d="M3 13.5 10 11l4.5-6.5c1-1.4 3.2-.6 2.8 1.1L15.5 12l5.5 2.5v2l-6-1-1.5 5h-2l.3-5.3L7 14.5 5.5 17H4l.5-3Z"/></symbol>
+    <symbol id="i-casual" viewBox="0 0 24 24"><path d="M8.5 3.5 3.5 6l2 4.5 2-1V21h9V9.5l2 1 2-4.5-5-2.5c0 1.7-1.6 3-3.5 3s-3.5-1.3-3.5-3Z"/></symbol>
+    <symbol id="i-workout" viewBox="0 0 24 24"><path d="M6.5 7.5v9M17.5 7.5v9M3.5 10v4M20.5 10v4M6.5 12h11"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="5.5" cy="12" r="1.4" fill="currentColor"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><circle cx="18.5" cy="12" r="1.4" fill="currentColor"/></symbol>
+    <!-- categories -->
+    <symbol id="i-all" viewBox="0 0 24 24"><rect x="4" y="4" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="4" width="6.5" height="6.5" rx="2"/><rect x="4" y="13.5" width="6.5" height="6.5" rx="2"/><rect x="13.5" y="13.5" width="6.5" height="6.5" rx="2"/></symbol>
+    <symbol id="i-shirts" viewBox="0 0 24 24"><path d="M8.5 3.5 3.5 6l2 4.5 2-1V21h9V9.5l2 1 2-4.5-5-2.5L12 7Z"/><path d="M12 7v14"/></symbol>
+    <symbol id="i-pants" viewBox="0 0 24 24"><path d="M7 3h10l1.5 18h-4.5L12 10l-2 11H5.5Z"/><path d="M7 6h10"/></symbol>
+    <symbol id="i-shoes" viewBox="0 0 24 24"><path d="M2.5 17v-5.5c2.5 0 4.5-1 5.5-3l3 2c2 1.2 5 1.6 7.5 2.6 1.7.7 3 1.8 3 3.9Z"/><path d="M2.5 17h19M8.5 11l1.5-1M11 12.5l1.5-1"/></symbol>
+    <symbol id="i-watches" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"/><path d="M9 7.6 9.6 3h4.8l.6 4.6M9 16.4l.6 4.6h4.8l.6-4.6M12 10v2.2l1.5 1"/></symbol>
+    <symbol id="i-belts" viewBox="0 0 24 24"><rect x="2" y="9.5" width="20" height="5.5" rx="1"/><rect x="5.5" y="8" width="5" height="8.5" rx="1"/><path d="M15 12.2h.01M18 12.2h.01"/></symbol>
+    <symbol id="i-caps" viewBox="0 0 24 24"><path d="M4 15c0-5 3.6-8.5 8-8.5s8 3.5 8 8.5Z"/><path d="M12 15h9.5c0 1.6-1.5 2.5-3.5 2.5H12M12 6.5V5"/></symbol>
+    <symbol id="i-glasses" viewBox="0 0 24 24"><circle cx="6.5" cy="14" r="3.5"/><circle cx="17.5" cy="14" r="3.5"/><path d="M10 13.5c1.2-1 2.8-1 4 0M3 14 2 8.5M21 14l1-5.5"/></symbol>
+    <symbol id="i-jewellery" viewBox="0 0 24 24"><circle cx="12" cy="15" r="6"/><path d="M9.5 5.5 12 3l2.5 2.5L12 9Z"/></symbol>
+    <symbol id="i-ties" viewBox="0 0 24 24"><path d="M10 3h4l-1 3h-2Z"/><path d="M11 6h2l2.2 11L12 21l-3.2-4Z"/></symbol>
+    <symbol id="i-scarves" viewBox="0 0 24 24"><path d="M5.5 4c3.5 2.2 9.5 2.2 13 0v4c-3.5 2.2-9.5 2.2-13 0Z"/><path d="M13 9.5h4l1 10h-4Z"/><path d="M14.5 19.5V21M16.5 19.5V21"/></symbol>
+    <symbol id="i-gloves" viewBox="0 0 24 24"><path d="M8 21v-4l-3-3.5 1-1.2 3 1.7V5.5a1 1 0 0 1 2 0V11V4.5a1 1 0 0 1 2 0V11V5.5a1 1 0 0 1 2 0V11V7.5a1 1 0 0 1 2 0V16l-2 5Z"/></symbol>
+    <symbol id="i-socks" viewBox="0 0 24 24"><path d="M9 3h6v9.5l3 3a3 3 0 0 1-4.2 4.2L9 15Z"/><path d="M9 6.5h6"/></symbol>
+    <symbol id="i-bookmark" viewBox="0 0 24 24"><path d="M6 3.5h12v17l-6-4.5-6 4.5Z"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3.5c2 0 3.2 1 4.3 2.6l2.4 3.8C14.3 15 15.5 16 17.5 16H21M18 13l3 3-3 3M3 16h3.5c1.2 0 2.1-.4 2.9-1.1M13.6 8.1c.8-.7 1.7-1.1 2.9-1.1H21M18 4l3 3-3 3"/></symbol>
+    <symbol id="i-bulb" viewBox="0 0 24 24"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.8.6 1.5 1.6 1.5 2.6V17h4v-.5c0-1 .7-2 1.5-2.6A6 6 0 0 0 12 3Z"/></symbol>
+    <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h11M19 18h1"/><circle cx="15" cy="6" r="2"/><circle cx="9" cy="12" r="2"/><circle cx="17" cy="18" r="2"/></symbol>
+    <symbol id="i-tag" viewBox="0 0 24 24"><path d="M3.5 12.5V4.5a1 1 0 0 1 1-1h8l8 8-9 9Z"/><circle cx="8.5" cy="8.5" r="1.5"/></symbol>
+    <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3.5 9 4.5-9 4.5L3 8Z"/><path d="m3 12 9 4.5 9-4.5M3 16l9 4.5 9-4.5"/></symbol>
+    <symbol id="i-palette" viewBox="0 0 24 24"><path d="M12 3.5a8.5 8.5 0 0 0 0 17c1.4 0 2-1 2-2 0-1.4-1.2-1.6-1.2-3 0-1 .8-1.7 1.8-1.7h2.4c2.2 0 3.5-1.6 3.5-3.6 0-3.7-3.8-6.7-8.5-6.7Z"/><circle cx="7.5" cy="11" r="1.2"/><circle cx="10.5" cy="7.3" r="1.2"/><circle cx="15" cy="7.8" r="1.2"/></symbol>
+    <symbol id="i-badge" viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 8.5h8M8 12.5h8M8 16.5h5"/></symbol>
+    <symbol id="i-fav" viewBox="0 0 24 24"><path d="M12 20.3s-7.6-4.6-9.4-9.3C1.3 7.7 3.4 4.3 6.9 4.3c2 0 3.6 1.1 5.1 3 1.5-1.9 3.1-3 5.1-3 3.5 0 5.6 3.4 4.3 6.7-1.8 4.7-9.4 9.3-9.4 9.3Z"/></symbol>
+  </defs>
+</svg>
+
+<div class="app">
+
+  <!-- Top bar -->
+  <header class="topbar" id="topbar">
+    <a class="brand" href="#home" aria-label="Outfit Match-maker, home">
+      <img class="brand-mark" src="img/logo-mark.png" alt="" width="414" height="414">
+      <span class="brand-text" aria-hidden="true"><span>Outfit</span><span>Match-maker</span></span>
+    </a>
+    <nav class="topnav" aria-label="Main">
+      <a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg><span>Home</span></a>
+      <a href="#wardrobe" data-nav="wardrobe"><svg class="i"><use href="#i-wardrobe"/></svg><span>Wardrobe</span></a>
+      <a href="#outfits" data-nav="outfits"><svg class="i"><use href="#i-hanger"/></svg><span>Outfits</span></a>
+      <a href="#shop" data-nav="shop"><svg class="i"><use href="#i-bag"/></svg><span>Shop</span></a>
+      <a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg><span>Profile</span></a>
+    </nav>
+    <div class="top-actions">
+      <button type="button" class="icon-btn only-shop" id="open-search" aria-label="Search the shop"><svg class="i"><use href="#i-search"/></svg></button>
+      <button type="button" class="icon-btn" id="open-bag" aria-label="Your bag"><svg class="i"><use href="#i-bag"/></svg><span class="count" id="bag-count" hidden>0</span></button>
+      <button type="button" class="icon-btn" id="open-bell" aria-label="Notifications"><svg class="i"><use href="#i-bell"/></svg></button>
+    </div>
+  </header>
+
+  <!-- Product page top bar (replaces the main top bar on a product) -->
+  <header class="topbar product-bar" id="product-bar" hidden>
+    <button type="button" class="icon-btn" id="product-back" aria-label="Back"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="top-actions">
+      <button type="button" class="icon-btn" id="product-like" aria-label="Save to wishlist" aria-pressed="false"><svg class="i"><use href="#i-heart"/></svg></button>
+      <button type="button" class="icon-btn" id="product-share" aria-label="Share"><svg class="i"><use href="#i-share"/></svg></button>
+      <button type="button" class="icon-btn" id="product-bag" aria-label="Your bag"><svg class="i"><use href="#i-bag"/></svg><span class="count" id="bag-count-2" hidden>0</span></button>
+    </div>
+  </header>
+
+  <main id="main" tabindex="-1">
+
+    <!-- HOME -->
+    <section class="page" id="page-home">
+      <p class="hello" id="greeting">Good day 👋</p>
+      <h1>What are you dressing for?</h1>
+      <p class="lead">Get complete outfit suggestions from your wardrobe</p>
+
+      <div class="occasions" id="occasions" role="group" aria-label="Occasion"></div>
+
+      <div class="home-hero">
+        <div class="hh-banner">
+          <h2>Build Your Perfect Outfit</h2>
+          <p>Mix your wardrobe, get AI suggestions, and discover matching items.</p>
+          <a class="btn-white" href="#outfits">Create Outfit <svg class="i"><use href="#i-arrow"/></svg></a>
+        </div>
+        <div class="hh-assist">
+          <div>
+            <h3><svg class="i spark"><use href="#i-sparkle"/></svg> AI Style Assistant</h3>
+            <p>Get personalised outfit ideas based on your wardrobe, occasion and weather.</p>
+            <button type="button" class="btn-ghost-brand" id="open-custom">Get Suggestions <svg class="i"><use href="#i-arrow"/></svg></button>
+          </div>
+          <span class="hh-orb" aria-hidden="true"><svg class="i"><use href="#i-sparkle"/></svg></span>
+        </div>
+      </div>
+
+      <div class="sec-head">
+        <h2>AI Outfit for You</h2>
+        <button type="button" class="see-all" id="ai-see-all">See All <svg class="i"><use href="#i-arrow"/></svg></button>
+      </div>
+      <div class="ai-track" id="ai-track" aria-live="polite"></div>
+      <div class="dots" id="ai-dots" aria-hidden="true"></div>
+
+      <a class="profile-nudge" id="profile-nudge" href="#profile" hidden></a>
+
+      <div class="shortcuts">
+        <a class="shortcut" href="#wardrobe/all"><span class="sc-ic"><svg class="i"><use href="#i-user"/></svg></span><span><strong>My Wardrobe</strong><span>Manage your clothes and accessories</span></span><svg class="i chev"><use href="#i-chev"/></svg></a>
+        <a class="shortcut" href="#outfits/saved"><span class="sc-ic"><svg class="i"><use href="#i-bookmark"/></svg></span><span><strong>Saved Outfits</strong><span>View and reuse your favourite looks</span></span><svg class="i chev"><use href="#i-chev"/></svg></a>
+        <a class="shortcut" href="#wardrobe/fav"><span class="sc-ic"><svg class="i"><use href="#i-heart"/></svg></span><span><strong>Favourites</strong><span>Your liked items and outfits</span></span><svg class="i chev"><use href="#i-chev"/></svg></a>
+        <button type="button" class="shortcut" id="open-insights"><span class="sc-ic"><svg class="i"><use href="#i-chart"/></svg></span><span><strong>Style Insights</strong><span>Your style trends and recommendations</span></span><svg class="i chev"><use href="#i-chev"/></svg></button>
+      </div>
+    </section>
+
+    <!-- OUTFITS -->
+    <section class="page" id="page-outfits" hidden>
+      <div class="ob-layout" id="ob-layout">
+        <div class="ob-builder" id="ob-builder">
+          <div class="ob-title"><div><h1>Build Your Outfit</h1>
+          <p class="lead">Choose pieces by scrolling</p></div>
+          <button type="button" class="btn-ghost-brand ob-saved-btn" id="open-saved"><svg class="i"><use href="#i-bookmark"/></svg> Saved Outfits</button></div>
+          <div class="ob-main">
+            <div class="ob-rows">
+              <div class="ob-row" data-cat="top">
+                <div class="ob-row-head"><svg class="i"><use href="#i-shirts"/></svg><h3>Top / Shirt</h3><a class="view-all" href="#wardrobe/shirts">View All</a></div>
+                <div class="car" id="car-top" data-cat="top"></div>
+              </div>
+              <div class="ob-row" data-cat="bottom">
+                <div class="ob-row-head"><svg class="i"><use href="#i-pants"/></svg><h3>Pants / Bottom</h3><a class="view-all" href="#wardrobe/pants">View All</a></div>
+                <div class="car" id="car-bottom" data-cat="bottom"></div>
+              </div>
+              <div class="ob-row" data-cat="shoes">
+                <div class="ob-row-head"><svg class="i"><use href="#i-shoes"/></svg><h3>Shoes</h3><a class="view-all" href="#wardrobe/shoes">View All</a></div>
+                <div class="car" id="car-shoes" data-cat="shoes"></div>
+              </div>
+              <button type="button" class="ai-tip" id="ai-tip" hidden></button>
+            </div>
+            <aside class="ob-acc" aria-label="Accessories">
+              <h3>Accessories</h3>
+              <div class="acc-col" id="acc-col"></div>
+            </aside>
+          </div>
+          <div class="saved" id="saved-wrap" hidden>
+            <div class="sec-head"><h2>Saved Outfits</h2></div>
+            <div class="saved-row" id="saved-row"></div>
+          </div>
+        </div>
+
+        <div class="ob-result" id="ob-result">
+          <button type="button" class="back-link" id="ob-back"><svg class="i"><use href="#i-back"/></svg> Back to builder</button>
+          <div class="yo-head"><h1>Your Outfit</h1><span class="yo-badge" id="yo-badge"></span></div>
+          <div class="yo-grid">
+            <div class="yo-preview" id="yo-preview"></div>
+            <div class="yo-side">
+              <div class="yo-block">
+                <h3 class="yo-title"><svg class="i spark"><use href="#i-sparkle"/></svg> AI Suggestions</h3>
+                <p class="muted small">Also try these for a different look:</p>
+                <div class="yo-sugs" id="yo-sugs"></div>
+              </div>
+              <div class="yo-block">
+                <h3 class="yo-title"><svg class="i"><use href="#i-bulb"/></svg> Why it works</h3>
+                <ul class="yo-why" id="yo-why"></ul>
+              </div>
+              <div class="yo-actions">
+            <button type="button" class="btn-outline" id="save-outfit"><svg class="i"><use href="#i-bookmark"/></svg> Save Outfit</button>
+            <button type="button" class="btn-dark" id="more-sugs"><svg class="i"><use href="#i-shuffle"/></svg> More Suggestions</button>
+          </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WARDROBE -->
+    <section class="page" id="page-wardrobe" hidden>
+      <div class="title-row">
+        <div>
+          <h1>My Wardrobe</h1>
+          <p class="lead" id="wardrobe-count">0 items</p>
+        </div>
+        <button class="btn-primary" type="button" id="open-add"><svg class="i"><use href="#i-plus"/></svg> Add Clothes</button>
+      </div>
+
+      <div class="w-layout" id="w-layout">
+        <aside class="w-side" aria-label="Wardrobe categories">
+          <nav class="w-cats" id="ward-cats"></nav>
+        </aside>
+
+        <div class="w-main">
+          <div class="filter-bar" id="ward-filters" role="group" aria-label="Filter your wardrobe">
+            <div class="filter">
+              <label for="f-brand">Brand</label>
+              <select id="f-brand"><option value="">All Brands</option></select>
+            </div>
+            <div class="filter">
+              <label for="f-colour">Colour</label>
+              <select id="f-colour"><option value="">All Colours</option></select>
+            </div>
+            <div class="filter">
+              <label for="f-type">Type</label>
+              <select id="f-type"><option value="">All Types</option></select>
+            </div>
+            <div class="filter filter-price">
+              <span class="filter-label" id="f-price-label">Price (€)</span>
+              <div class="price-range" role="group" aria-labelledby="f-price-label">
+                <input id="f-min" inputmode="decimal" placeholder="Min" aria-label="Minimum price in euros" autocomplete="off">
+                <span aria-hidden="true">–</span>
+                <input id="f-max" inputmode="decimal" placeholder="Max" aria-label="Maximum price in euros" autocomplete="off">
+              </div>
+            </div>
+            <div class="filter-tools">
+              <button type="button" class="icon-btn filter-btn" id="w-sort-btn" aria-expanded="false" aria-label="Sort and clear filters"><svg class="i"><use href="#i-sliders"/></svg><span class="count" id="filter-count" hidden>0</span></button>
+              <div class="pop" id="w-sort" hidden>
+                <p class="pop-title">Sort by</p>
+                <button type="button" data-sort="new">Recently added</button>
+                <button type="button" data-sort="name">Name (A–Z)</button>
+                <button type="button" data-sort="price-asc">Price: low to high</button>
+                <button type="button" data-sort="price-desc">Price: high to low</button>
+                <button type="button" class="pop-clear" id="f-clear">Clear all filters</button>
+              </div>
+            </div>
+          </div>
+          <div class="w-title"><h2 id="w-cat-title">Shirts</h2><span class="muted" id="w-cat-count"></span></div>
+          <p class="muted small filter-result" id="f-result" aria-live="polite"></p>
+          <div class="wgrid" id="ward-items"></div>
+        </div>
+
+        <aside class="w-detail" id="w-detail" aria-label="Item details" hidden></aside>
+      </div>
+    </section>
+
+    <!-- SHOP -->
+    <section class="page" id="page-shop" hidden>
+      <h1>Shop</h1>
+      <p class="lead">Clothing recommendations from our partner shops</p>
+
+      <div class="shop-search" id="shop-search" hidden>
+        <svg class="i"><use href="#i-search"/></svg>
+        <input id="shop-q" type="search" placeholder="Search products, shops or colours" aria-label="Search products" autocomplete="off">
+      </div>
+
+      <div class="filter-bar shop-filters" role="group" aria-label="Filter products">
+        <div class="filter">
+          <label for="s-brand">Brand</label>
+          <select id="s-brand"><option value="">All Brands</option></select>
+        </div>
+        <div class="filter">
+          <label for="s-cat">Category</label>
+          <select id="s-cat"><option value="all">All Categories</option></select>
+        </div>
+        <div class="filter">
+          <label for="s-colour">Colour</label>
+          <div class="colour-select"><i class="rainbow" id="s-colour-dot"></i><select id="s-colour"><option value="">All Colours</option></select></div>
+        </div>
+        <div class="filter filter-price">
+          <span class="filter-label" id="s-price-label">Price Range (€)</span>
+          <div class="price-range" role="group" aria-labelledby="s-price-label">
+            <input id="s-min" inputmode="decimal" placeholder="Min" aria-label="Minimum price in euros" autocomplete="off">
+            <span aria-hidden="true">–</span>
+            <input id="s-max" inputmode="decimal" placeholder="Max" aria-label="Maximum price in euros" autocomplete="off">
+          </div>
+        </div>
+        <div class="filter-tools">
+          <button type="button" class="icon-btn filter-btn" id="s-sort-btn" aria-expanded="false" aria-label="Sort and clear filters"><svg class="i"><use href="#i-sliders"/></svg><span class="count" id="s-filter-count" hidden>0</span></button>
+          <div class="pop" id="s-sort" hidden>
+            <p class="pop-title">Sort by</p>
+            <button type="button" data-ssort="match">Best match</button>
+            <button type="button" data-ssort="price-asc">Price: low to high</button>
+            <button type="button" data-ssort="price-desc">Price: high to low</button>
+            <button type="button" class="pop-clear" id="s-clear">Clear all filters</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero">
+        <div class="hero-text">
+          <h2>Complete Your Look</h2>
+          <p>Handpicked items that match your wardrobe</p>
+          <button type="button" class="btn-white" id="explore">Explore Now <svg class="i"><use href="#i-arrow"/></svg></button>
+        </div>
+        <div class="hero-art" id="hero-art" aria-hidden="true"></div>
+      </div>
+
+      <div class="cat-tiles" id="shop-tabs" role="tablist" aria-label="Shop categories"></div>
+
+      <div class="sec-head" id="rec-head">
+        <div>
+          <h2 id="rec-title">Recommended for You</h2>
+          <p class="sub" id="rec-sub">Based on your wardrobe &amp; style preferences</p>
+        </div>
+        <button type="button" class="see-all" id="rec-all">See All</button>
+      </div>
+      <div class="prow big" id="shop-items"></div>
+
+      <div id="complete-wrap">
+        <div class="sec-head">
+          <div>
+            <h2>Complete the Outfit</h2>
+            <p class="sub" id="complete-sub">Items that go well with the selected clothing item</p>
+          </div>
+          <button type="button" class="see-all" id="complete-all">See All</button>
+        </div>
+        <div class="prow" id="complete-items"></div>
+      </div>
+      <p class="muted small note">Sample products for the prototype. Prices and shops are placeholders.</p>
+    </section>
+
+    <!-- PRODUCT -->
+    <section class="page" id="page-product" hidden>
+      <div id="product-body"></div>
+    </section>
+
+    <!-- PROFILE -->
+    <section class="page" id="page-profile" hidden>
+      <div class="pp">
+        <div class="pp-hero">
+          <div class="pp-avatar" id="pp-avatar">?</div>
+          <div class="pp-who">
+            <h1 id="pp-name">My profile</h1>
+            <p class="muted" id="pp-sub">All details are optional. The more you add, the better the app can style you.</p>
+          </div>
+          <div class="pp-progress" aria-live="polite">
+            <div class="ring" id="pp-ring"><span id="pp-pct">0%</span></div>
+            <p class="small muted" id="p-progress-text"></p>
+          </div>
+        </div>
+
+        <nav class="pp-jump" aria-label="Profile sections" id="pp-jump"></nav>
+
+        <form id="profile-form" novalidate>
+          <div id="p-fields"></div>
+
+          <section class="ps" id="sec-skin">
+            <div class="ps-side">
+              <span class="ps-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18Z" fill="currentColor"/></svg></span>
+              <h2>Skin tone <span class="soon">Coming soon</span></h2>
+              <p class="muted small">Colours chosen for your skin.</p>
+            </div>
+            <div class="ps-card">
+              <p class="skin-text">Upload a photo and Match-maker will detect your skin tone. Using skin colour theory, the app then chooses the clothing colours that suit you best, for outfits from your wardrobe and for products in the Shop.</p>
+              <div class="undertones">
+                <div><h3>Warm undertone</h3><p class="muted small">Golden or olive skin</p><div class="tone-dots"><i style="background:#5b6340"></i><i style="background:#d8c7a8"></i><i style="background:#6b4426"></i><i style="background:#a3242b"></i><i style="background:#f1e6d0"></i></div></div>
+                <div><h3>Cool undertone</h3><p class="muted small">Pink or blue hints</p><div class="tone-dots"><i style="background:#1f2a44"></i><i style="background:#a9c4e0"></i><i style="background:#9b9b9b"></i><i style="background:#e7b7c0"></i><i style="background:#ffffff"></i></div></div>
+                <div><h3>Neutral undertone</h3><p class="muted small">A mix of both</p><div class="tone-dots"><i style="background:#141414"></i><i style="background:#ffffff"></i><i style="background:#2f6b4f"></i><i style="background:#3d5a80"></i><i style="background:#d8c7a8"></i></div></div>
+              </div>
+              <button type="button" class="btn-outline" disabled>Upload photo (coming soon)</button>
+            </div>
+          </section>
+
+          <div class="savebar">
+            <span id="p-saved" aria-live="polite"></span>
+            <button class="btn-dark" type="submit">Save profile</button>
+          </div>
+        </form>
+
+        <p class="pp-reset"><button class="link" type="button" id="reset">Reset demo data</button></p>
+      </div>
+    </section>
+  </main>
+
+  <!-- Bottom tab bar (phones and tablets) -->
+  <nav class="tabbar" id="tabbar" aria-label="Main">
+    <a href="#home" data-nav="home"><svg class="i"><use href="#i-home"/></svg><span>Home</span></a>
+    <a href="#wardrobe" data-nav="wardrobe"><svg class="i"><use href="#i-wardrobe"/></svg><span>Wardrobe</span></a>
+    <a href="#outfits" data-nav="outfits"><svg class="i"><use href="#i-hanger"/></svg><span>Outfits</span></a>
+    <a href="#shop" data-nav="shop"><svg class="i"><use href="#i-bag"/></svg><span>Shop</span></a>
+    <a href="#profile" data-nav="profile"><svg class="i"><use href="#i-user"/></svg><span>Profile</span></a>
+  </nav>
+</div>
+
+<!-- Custom look -->
+<dialog id="custom-dialog" class="sheet" aria-labelledby="custom-title">
+  <form id="prompt-form" method="dialog">
+    <div class="sheet-head">
+      <h2 id="custom-title">Prefer a custom look?</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <p class="muted small">Tell me where you're going and what you'd like to wear.</p>
+    <div class="prompt">
+      <label for="prompt" class="sr">Describe what you are going to do</label>
+      <input id="prompt" autocomplete="off" placeholder="e.g. Party tonight, something black">
+      <button class="btn-dark" type="submit"><svg class="i"><use href="#i-sparkle"/></svg> Style me</button>
+    </div>
+    <div class="chips" id="quick">
+      <button type="button" class="chip">College tomorrow</button>
+      <button type="button" class="chip">Party tonight, something black</button>
+      <button type="button" class="chip">Job interview</button>
+      <button type="button" class="chip">Dinner date, light colours</button>
+      <button type="button" class="chip">Chill weekend, it's cold</button>
+      <button type="button" class="chip">Wedding guest</button>
+    </div>
+  </form>
+</dialog>
+
+<!-- Add clothes dialog -->
+<dialog id="add-dialog" class="sheet" aria-labelledby="add-title">
+  <form method="dialog" id="add-form">
+    <div class="sheet-head">
+      <h2 id="add-title">Add Clothes</h2>
+      <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
+    </div>
+    <div class="upload" id="upload">
+      <input type="file" id="a-photo" accept="image/*">
+      <label for="a-photo" id="upload-label">
+        <span id="upload-preview"></span>
+        <span id="upload-text">Take or upload a photo (optional)</span>
+      </label>
+    </div>
+    <div class="field"><label for="a-name">Name</label><input id="a-name" placeholder="e.g. White linen shirt" required></div>
+    <div class="field-pair">
+      <div class="field"><label for="a-group">Category</label><select id="a-group"></select></div>
+      <div class="field"><label for="a-style">Clothing type</label><select id="a-style"></select></div>
+    </div>
+    <div class="field-pair">
+      <div class="field"><label for="a-brand">Brand</label><input id="a-brand" placeholder="e.g. Uniqlo" autocomplete="off"></div>
+      <div class="field"><label for="a-size">Size</label><input id="a-size" list="size-list" placeholder="e.g. M" autocomplete="off"></div>
+      <div class="field"><label for="a-price">Price (€)</label><input id="a-price" inputmode="decimal" placeholder="e.g. 29.95" autocomplete="off"></div>
+      <div class="field"><label for="a-material">Material</label><input id="a-material" list="material-list" placeholder="e.g. Cotton" autocomplete="off"></div>
+      <div class="field"><label for="a-colour">Colour</label><select id="a-colour"></select></div>
+    </div>
+    <p class="error" id="add-error" aria-live="polite"></p>
+    <div class="dialog-actions">
+      <button class="btn-outline" value="cancel" formnovalidate>Cancel</button>
+      <button class="btn-primary" id="add-save" value="save">Add to wardrobe</button>
+    </div>
+  </form>
+</dialog>
+
+<datalist id="material-list"></datalist>
+
+<!-- Wardrobe item detail panel -->
+<dialog id="item-dialog" class="drawer" aria-labelledby="ip-name">
+  <div id="item-body"></div>
+</dialog>
+
+<!-- Bag -->
+<dialog id="bag-dialog" class="drawer" aria-labelledby="bag-title">
+  <div id="bag-body"></div>
+</dialog>
+
+<!-- Style insights -->
+<dialog id="insights-dialog" class="sheet" aria-labelledby="ins-title">
+  <div class="sheet-head"><h2 id="ins-title">Style Insights</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div id="insights-body"></div>
+</dialog>
+
+<!-- Saved outfits -->
+<dialog id="saved-dialog" class="sheet" aria-labelledby="saved-title">
+  <div class="sheet-head"><h2 id="saved-title">Saved Outfits</h2><button type="button" class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <p class="muted small">Tap an outfit to load it on the board.</p>
+  <div class="saved-row saved-grid" id="saved-dialog-row"></div>
+</dialog>
+
+<!-- Delete warning -->
+<dialog id="del-dialog" aria-labelledby="del-title">
+  <h2 id="del-title">Delete this item?</h2>
+  <p>This removes it from your wardrobe and saved outfits. You can’t undo this.</p>
+  <div class="dialog-actions">
+    <button class="btn-outline" type="button" id="del-cancel">Cancel</button>
+    <button class="btn-danger" type="button" id="del-ok">Delete</button>
+  </div>
+</dialog>
+
+<!-- Size guide -->
+<dialog id="size-dialog" aria-labelledby="size-title">
+  <h2 id="size-title">Size Guide</h2>
+  <div id="size-body"></div>
+  <div class="dialog-actions"><button class="btn-dark" type="button" data-close>Done</button></div>
+</dialog>
+
+<!-- Body fat guide -->
+<dialog id="fat-dialog" aria-labelledby="fat-title">
+  <h2 id="fat-title">Find your body fat</h2>
+  <p class="muted small">Compare the shapes and pick the one closest to you. An estimate is enough.</p>
+  <div class="fat-grid" id="fat-grid"></div>
+  <div class="dialog-actions"><button class="btn-outline" type="button" id="fat-close">Close</button></div>
+</dialog>
+
+<!-- Ask for profile details -->
+<dialog id="ask-dialog" aria-labelledby="ask-title">
+  <h2 id="ask-title">Tell us about you</h2>
+  <p>To find clothes that fit you, Match-maker uses your body data, sizes and measurements. Everything is optional and takes about 3 minutes with a measuring tape.</p>
+  <p class="muted small" id="ask-missing"></p>
+  <div class="dialog-actions">
+    <button class="btn-outline" type="button" id="ask-later">Later</button>
+    <button class="btn-primary" type="button" id="ask-go">Enter my details</button>
+  </div>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="js/data.js?v=17"></script>
+<script src="js/app.js?v=17"></script>
+</body>
+</html>
