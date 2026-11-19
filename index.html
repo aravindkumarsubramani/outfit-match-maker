@@ -11,7 +11,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="css/style.css?v=19">
+<link rel="stylesheet" href="css/style.css?v=20">
 </head>
 <body>
 
@@ -431,36 +431,49 @@
   </form>
 </dialog>
 
-<!-- Add clothes dialog -->
-<dialog id="add-dialog" class="sheet" aria-labelledby="add-title">
-  <form method="dialog" id="add-form">
+<!-- Add clothes dialog: photo → the app reads type, colour and material → you check the details -->
+<dialog id="add-dialog" class="sheet add-sheet" aria-labelledby="add-title">
+  <form id="add-form" novalidate>
     <div class="sheet-head">
       <h2 id="add-title">Add Clothes</h2>
       <button type="button" class="icon-btn" data-close aria-label="Close"><svg class="i"><use href="#i-x"/></svg></button>
     </div>
-    <div class="upload" id="upload">
-      <input type="file" id="a-photo" accept="image/*">
-      <label for="a-photo" id="upload-label">
-        <span id="upload-preview"></span>
-        <span id="upload-text">Take or upload a photo (optional)</span>
-      </label>
-    </div>
-    <div class="field"><label for="a-name">Name</label><input id="a-name" placeholder="e.g. White linen shirt" required></div>
-    <div class="field-pair">
-      <div class="field"><label for="a-group">Category</label><select id="a-group"></select></div>
-      <div class="field"><label for="a-style">Clothing type</label><select id="a-style"></select></div>
-    </div>
-    <div class="field-pair">
-      <div class="field"><label for="a-brand">Brand</label><input id="a-brand" placeholder="e.g. Basico" autocomplete="off"></div>
-      <div class="field"><label for="a-size">Size</label><input id="a-size" list="size-list" placeholder="e.g. M" autocomplete="off"></div>
-      <div class="field"><label for="a-price">Price (€)</label><input id="a-price" inputmode="decimal" placeholder="e.g. 29.95" autocomplete="off"></div>
-      <div class="field"><label for="a-material">Material</label><input id="a-material" list="material-list" placeholder="e.g. Cotton" autocomplete="off"></div>
-      <div class="field"><label for="a-colour">Colour</label><select id="a-colour"></select></div>
+    <div class="add-grid">
+      <div class="add-left">
+        <div class="upload" id="upload">
+          <input type="file" id="a-photo" accept="image/*">
+          <label for="a-photo" id="upload-label">
+            <span id="upload-preview"><img id="a-preview" alt="" hidden></span>
+            <span id="upload-text"><svg class="i"><use href="#i-plus"/></svg> Take or upload a photo</span>
+          </label>
+        </div>
+        <div class="scan-status" id="scan-status" aria-live="polite" hidden>
+          <span class="scan-msg" id="scan-msg"></span>
+          <span class="scan-bar"><i id="scan-bar"></i></span>
+        </div>
+        <div class="pic-choice" id="pic-choice" role="radiogroup" aria-label="Picture for your wardrobe">
+          <button type="button" role="radio" data-pic="clean" aria-checked="true"><span class="pc-ph" id="pc-clean"></span><span><strong>Clean studio picture</strong><small>Same look as all your clothes</small></span></button>
+          <button type="button" role="radio" data-pic="photo" aria-checked="false" id="pc-photo-btn" hidden><span class="pc-ph" id="pc-photo"></span><span><strong>My photo, cleaned</strong><small>Background removed</small></span></button>
+        </div>
+        <p class="muted small add-privacy">Your photo is analysed on this device. It is never uploaded.</p>
+      </div>
+      <div class="add-right">
+        <div class="field"><label for="a-name">Name <span class="req-tag">(required)</span></label><input id="a-name" placeholder="e.g. Grey hoodie" autocomplete="off"></div>
+        <div class="chip-field"><span class="pf-label">Category</span><div class="opt-chips" id="a-groups" role="radiogroup" aria-label="Category"></div></div>
+        <div class="chip-field"><span class="pf-label">Clothing type</span><div class="opt-chips" id="a-types" role="radiogroup" aria-label="Clothing type"></div></div>
+        <div class="chip-field"><span class="pf-label">Colour <span class="muted small" id="a-tone-name"></span></span><div class="opt-swatches" id="a-tones" role="radiogroup" aria-label="Colour"></div></div>
+        <div class="chip-field"><span class="pf-label">Material</span><div class="opt-chips" id="a-mats" role="radiogroup" aria-label="Material"></div></div>
+        <div class="chip-field"><span class="pf-label">Size</span><div class="opt-chips" id="a-sizes" role="radiogroup" aria-label="Size"></div></div>
+        <div class="field-pair">
+          <div class="field"><label for="a-brand">Brand</label><input id="a-brand" placeholder="e.g. Basico" autocomplete="off"></div>
+          <div class="field"><label for="a-price">Price (€)</label><input id="a-price" inputmode="decimal" placeholder="e.g. 29.95" autocomplete="off"></div>
+        </div>
+      </div>
     </div>
     <p class="error" id="add-error" aria-live="polite"></p>
     <div class="dialog-actions">
-      <button class="btn-outline" value="cancel" formnovalidate>Cancel</button>
-      <button class="btn-primary" id="add-save" value="save">Add to wardrobe</button>
+      <button class="btn-outline" type="button" data-close>Cancel</button>
+      <button class="btn-primary" id="add-save" type="submit">Add to wardrobe</button>
     </div>
   </form>
 </dialog>
@@ -528,7 +541,8 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
-<script src="js/data.js?v=19"></script>
-<script src="js/app.js?v=19"></script>
+<script src="js/data.js?v=20"></script>
+<script src="js/studio.js?v=20"></script>
+<script src="js/app.js?v=20"></script>
 </body>
 </html>

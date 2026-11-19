@@ -488,7 +488,8 @@ const OCCASIONS = [
 const COLOR_WORDS = {
   black:["black"], white:["white"], grey:["grey","gray"], navy:["navy"], beige:["beige","cream","sand"],
   blue:["denim","jeans"], lightblue:["light blue","sky"], olive:["olive","khaki"], brown:["brown"],
-  red:["red"], green:["green"], pink:["pink"]
+  red:["red"], green:["green"], pink:["pink"], burgundy:["burgundy","maroon"], cream:["cream","ivory"],
+  charcoal:["charcoal"], yellow:["yellow","mustard"], orange:["orange"], purple:["purple"]
 };
 function readRequest(text){
   const t = " " + text.toLowerCase() + " ";
@@ -560,7 +561,7 @@ function rankOutfits(r){
   return all.sort((a, b) => b.s - a.s);
 }
 function bestAccessory(o, r){
-  const skip = r.cold ? [] : ["scarf","gloves"];
+  const skip = r.cold ? [] : ["scarf","gloves","beanie"];
   let best = null;
   wardrobe.filter(a => a.cat === "acc" && a.style !== "socks" && !skip.includes(a.style)).forEach(a => {
     let s = matchScore(o.top, a) + matchScore(o.bottom, a) - 1.5 * Math.abs(formality(a) - r.occ.formal);
@@ -799,7 +800,7 @@ function updateCounts(){
   const n = wardrobe.length;
   $("#wardrobe-count").textContent = `${n} item${n === 1 ? "" : "s"}`;
 }
-function saveWardrobe(){ store.set("mm-wardrobe", wardrobe); }
+function saveWardrobe(){ return store.set("mm-wardrobe", wardrobe); }
 function toggleFav(id){
   const it = wardrobe.find(x => x.id === id); if(!it) return;
   it.fav = !it.fav; saveWardrobe();
@@ -882,9 +883,10 @@ function matchScore(a, b){
 
 /* The colour is read from the name ("Navy linen shirt" → navy) unless you pick one */
 const TONE_WORDS = [["light blue","lightblue"],["sky blue","lightblue"],["baby blue","lightblue"],["navy","navy"],["denim","blue"],["blue","blue"],
-  ["white","white"],["cream","beige"],["ivory","white"],["black","black"],["charcoal","grey"],["grey","grey"],["gray","grey"],
+  ["white","white"],["cream","cream"],["ivory","cream"],["off white","cream"],["black","black"],["charcoal","charcoal"],["grey","grey"],["gray","grey"],
   ["beige","beige"],["khaki","beige"],["tan","brown"],["sand","beige"],["camel","brown"],["olive","olive"],["khaki green","olive"],
-  ["brown","brown"],["chocolate","brown"],["burgundy","red"],["maroon","red"],["red","red"],["green","green"],["pink","pink"],
+  ["brown","brown"],["chocolate","brown"],["burgundy","burgundy"],["maroon","burgundy"],["wine","burgundy"],["red","red"],["green","green"],["pink","pink"],
+  ["yellow","yellow"],["mustard","yellow"],["orange","orange"],["rust","orange"],["purple","purple"],["lilac","purple"],["lavender","purple"],
   ["silver","silver"],["gold","gold"]];
 function toneFromName(name, fallback){
   const n = " " + name.toLowerCase().replace(/[^a-z]+/g, " ") + " ";
@@ -1006,8 +1008,10 @@ function detailSubmit(e){
     if(it.cat === "acc") board.acc = board.acc.filter(a => a.id !== it.id);
     else if(board[it.cat] && board[it.cat].id === it.id) board[it.cat] = null;
   }
-  Object.assign(it, {name, cat, style, tone:$("#e-tone").value, brand:$("#e-brand").value.trim(), size:$("#e-size").value.trim(), price:price.value, material:$("#e-material").value.trim()});
+  const tone = $("#e-tone").value, looksChanged = style !== it.style || tone !== it.tone;
+  Object.assign(it, {name, cat, style, tone, brand:$("#e-brand").value.trim(), size:$("#e-size").value.trim(), price:price.value, material:$("#e-material").value.trim()});
   saveWardrobe(); saveBoard();
+  if(looksChanged && it.picMode === "clean") cleanPicture(style, tone).then(url => { if(url){ it.img = url; saveWardrobe(); renderWardrobe(); if($("#item-dialog").open) openItem(it.id); } }).catch(() => {});
   openItem(it.id);
   toast("Changes saved");
 }
@@ -1018,53 +1022,184 @@ function detailSubmit(e){
 });
 $("#item-dialog").addEventListener("close", () => { if(!wardWide()){ wardSel = null; wardMode = "view"; renderWardrobe(); } });
 
-/* Add clothes */
-let newImg = null, addToneTouched = false;
-$("#a-group").innerHTML = groupOptions("shirts");
-$("#a-style").innerHTML = styleOptions("shirts");
-$("#a-colour").innerHTML = toneOptions("black");
-$("#a-group").addEventListener("change", e => { $("#a-style").innerHTML = styleOptions(e.target.value); });
-$("#a-colour").addEventListener("change", () => { addToneTouched = true; });
-$("#a-name").addEventListener("input", e => { if(!addToneTouched) $("#a-colour").value = toneFromName(e.target.value, $("#a-colour").value); });
-$("#open-add").addEventListener("click", () => {
-  newImg = null; addToneTouched = false;
-  $("#add-form").reset(); $("#add-error").textContent = "";
-  const gid = GROUPS.find(g => g.id === wardCat) ? wardCat : "shirts";
-  $("#a-group").value = gid; $("#a-style").innerHTML = styleOptions(gid);
-  $("#a-colour").value = "black";
-  $("#upload-preview").style.backgroundImage = ""; $("#upload-text").textContent = "Take or upload a photo (optional)";
-  $("#add-dialog").showModal(); $("#a-name").focus();
+/* Add clothes: take a photo → the app reads type, colour and material → you tap to confirm → clean studio picture */
+const add = {};
+const nameWord = st => ((STYLES[st] || {}).label || "").split(/[(/]/)[0].trim().toLowerCase();
+function autoName(){ return `${TONES[add.tone].name} ${nameWord(add.style)}`.replace(/^Denim blue /, "Blue "); }
+function mySize(cat){
+  if(cat === "top") return profile.shirt || "M";
+  if(cat === "bottom") return [profile.pantWaist || "W32", profile.pantLength || "L32"].join(" ");
+  if(cat === "shoes") return profile.shoe ? "EU " + Math.round(Number(profile.shoe)) : "EU 42";
+  return "One size";
+}
+function resetAdd(gid){
+  const g = GROUPS.find(x => x.id === gid) || GROUPS[0];
+  Object.assign(add, {group:g.id, style:g.styles[0], tone:"black", material:MATERIALS_FOR[g.cat][0], size:mySize(g.cat),
+    photo:null, cut:null, clean:null, pic:"clean", ai:null, touched:{}, nameTouched:false, scanId:(add.scanId || 0) + 1, allMats:false});
+}
+const radio = (attr, val, on, label, extra = "") => `<button type="button" role="radio" ${attr}="${esc(val)}" aria-checked="${on}"${extra}>${label}</button>`;
+const aiMark = `<span class="ai-mark" title="Suggested from your photo">${icon("sparkle")}</span>`;
+function renderAddChips(){
+  const g = GROUPS.find(x => x.id === add.group), ai = add.ai || {};
+  const aiTypes = (ai.types || []).filter(([st, p]) => g.styles.includes(st) && p > .08).map(x => x[0]);
+  $("#a-groups").innerHTML = GROUPS.map(x => radio("data-agroup", x.id, x.id === add.group, `${icon(x.id)} ${esc(x.label)}${ai.group === x.id ? aiMark : ""}`)).join("");
+  const types = [...aiTypes, ...g.styles.filter(st => !aiTypes.includes(st))];
+  $("#a-types").innerHTML = types.map(st => radio("data-astyle", st, st === add.style, `${esc(STYLES[st].label)}${aiTypes.includes(st) ? aiMark : ""}`)).join("");
+  const aiTone = ai.tone;
+  $("#a-tones").innerHTML = Object.entries(TONES).map(([k, t]) => radio("data-atone", k, k === add.tone, `${k === aiTone ? aiMark : ""}`,
+    ` style="--sw:${t.hex}" aria-label="${t.name}" title="${t.name}"`)).join("");
+  $("#a-tone-name").textContent = TONES[add.tone].name;
+  const base = MATERIALS_FOR[g.cat], aiMat = ai.material;
+  let mats = add.allMats ? MATERIALS : base.slice(0, 8);
+  if(aiMat && !mats.includes(aiMat)) mats = [aiMat, ...mats];
+  if(add.material && !mats.includes(add.material)) mats = [add.material, ...mats];
+  $("#a-mats").innerHTML = mats.map(m => radio("data-amat", m, m === add.material, `${esc(m)}${m === aiMat ? aiMark : ""}`)).join("")
+    + (add.allMats ? "" : `<button type="button" class="chip-more" data-amore>More…</button>`);
+  const sizes = [...SIZE_CHIPS[g.cat]]; if(add.size && !sizes.includes(add.size)) sizes.unshift(add.size);
+  $("#a-sizes").innerHTML = sizes.map(sz => radio("data-asize", sz, sz === add.size, esc(sz))).join("");
+  if(!add.nameTouched) $("#a-name").value = autoName();
+}
+function renderPicChoice(){
+  $$("#pic-choice [data-pic]").forEach(b => b.setAttribute("aria-checked", b.dataset.pic === add.pic));
+  $("#pc-photo-btn").hidden = !add.photo; $("#pic-choice").hidden = !add.photo;
+  $("#pc-clean").innerHTML = add.clean ? `<img src="${add.clean}" alt="">` : `<span class="spin"></span>`;
+  $("#pc-photo").innerHTML = add.cut ? `<img src="${add.cut}" alt="">` : add.photo ? `<img src="${add.photo}" alt="" class="raw">` : "";
+  const big = add.pic === "photo" ? (add.cut || add.photo) : add.clean;
+  $("#a-preview").hidden = !big; if(big) $("#a-preview").src = big;
+  $("#upload").classList.toggle("has-pic", !!big);
+  $("#upload-text").innerHTML = add.photo ? `${icon("edit")} Retake photo` : `${icon("plus")} Take or upload a photo`;
+}
+/* New clean picture whenever type or colour changes */
+let cleanTicket = 0;
+function refreshClean(){
+  const t = ++cleanTicket; add.clean = null; renderPicChoice();
+  cleanPicture(add.style, add.tone).then(url => {
+    if(t !== cleanTicket) return;
+    add.clean = url; renderPicChoice();
+  }).catch(() => { if(t === cleanTicket){ add.clean = null; $("#pc-clean").innerHTML = pic({cat:GROUPS.find(g => g.id === add.group).cat, style:add.style, tone:add.tone}); } });
+}
+function scanStatus(msg, frac){
+  $("#scan-status").hidden = !msg;
+  $("#scan-msg").textContent = msg || "";
+  $("#scan-bar").parentElement.hidden = frac === undefined;
+  if(frac !== undefined) $("#scan-bar").style.width = Math.round(frac * 100) + "%";
+}
+function setStyle(st){
+  const g = GROUPS.find(x => x.styles.includes(st)); if(!g) return;
+  if(g.id !== add.group){
+    add.group = g.id;
+    if(!add.touched.material) add.material = MATERIALS_FOR[g.cat][0];
+    if(!add.touched.size) add.size = mySize(g.cat);
+  }
+  add.style = st;
+}
+$("#add-dialog").addEventListener("click", e => {
+  const b = e.target.closest("[data-agroup],[data-astyle],[data-atone],[data-amat],[data-asize],[data-amore],[data-pic]"); if(!b) return;
+  const d = b.dataset;
+  if(d.agroup){ const g = GROUPS.find(x => x.id === d.agroup); add.touched.style = true; setStyle(g.styles.includes(add.style) ? add.style : g.styles[0]); refreshClean(); }
+  else if(d.astyle){ add.touched.style = true; setStyle(d.astyle); refreshClean(); }
+  else if(d.atone){ add.touched.tone = true; add.tone = d.atone; refreshClean(); }
+  else if(d.amat){ add.touched.material = true; add.material = d.amat; }
+  else if(d.asize){ add.touched.size = true; add.size = d.asize; }
+  else if(d.amore !== undefined){ add.allMats = true; }
+  else if(d.pic){ add.pic = d.pic; if(d.pic === "photo") makeCutout(); renderPicChoice(); return; }
+  renderAddChips();
 });
+$("#a-name").addEventListener("input", () => { add.nameTouched = $("#a-name").value.trim() !== ""; });
+
+$("#open-add").addEventListener("click", () => {
+  resetAdd(GROUPS.find(g => g.id === wardCat) ? wardCat : "shirts");
+  $("#add-form").reset(); $("#add-error").textContent = ""; $("#a-photo").value = "";
+  scanStatus(""); renderAddChips(); refreshClean();
+  $("#add-dialog").showModal();
+});
+
+/* Photo → square canvas → colour now, type and material from the analyser */
+let addCanvas = null;
 $("#a-photo").addEventListener("change", e => {
   const f = e.target.files[0]; if(!f) return;
   const reader = new FileReader();
   reader.onload = () => {
     const img = new Image();
     img.onload = () => {
-      const size = 600, c = document.createElement("canvas");
-      const s = Math.min(img.width, img.height);
+      const size = 600, c = document.createElement("canvas"), s = Math.min(img.width, img.height);
       c.width = c.height = size;
-      c.getContext("2d").drawImage(img, (img.width - s)/2, (img.height - s)/2, s, s, 0, 0, size, size);
-      newImg = c.toDataURL("image/jpeg", .82);
-      $("#upload-preview").style.backgroundImage = `url(${newImg})`;
-      $("#upload-text").textContent = f.name;
+      c.getContext("2d").drawImage(img, (img.width - s) / 2, (img.height - s) / 2, s, s, 0, 0, size, size);
+      addCanvas = c; add.photo = c.toDataURL("image/jpeg", .82); add.cut = null;
+      startScan(c);
     };
+    img.onerror = () => toast("This photo can't be opened. Try a JPG or PNG.");
     img.src = reader.result;
   };
   reader.readAsDataURL(f);
 });
+async function startScan(canvas){
+  const id = ++add.scanId;
+  let pix = [];
+  try { pix = photoTones(canvas); } catch(err){}
+  if(pix.length && !add.touched.tone){ add.tone = pix[0][0]; add.ai = {...(add.ai || {}), tone:pix[0][0]}; }
+  renderAddChips(); refreshClean(); renderPicChoice();
+  scanStatus("Reading your photo…");
+  try {
+    const scan = await import("./scan.js?v=20");
+    const res = await scan.analysePhoto(canvas, f => { if(id === add.scanId) scanStatus("Getting the photo analyser ready (first time only)…", f); });
+    if(id !== add.scanId) return;
+    /* Colour: the analyser and the pixel colour together */
+    const tone = {}; res.tones.forEach(([t, p]) => tone[t] = (tone[t] || 0) + .6 * p); pix.forEach(([t, p]) => tone[t] = (tone[t] || 0) + .4 * p);
+    const bestTone = Object.entries(tone).sort((a, b) => b[1] - a[1])[0][0];
+    let types = res.types;
+    const denim = (res.materials.find(m => m[0] === "Denim") || [0, 0])[1];
+    if(types[0][0] === "denimshirt" && denim < .3) types = [types.find(t => t[0] === "shirt"), ...types.filter(t => t[0] !== "shirt")];
+    const bestStyle = types[0][0], group = GROUPS.find(g => g.styles.includes(bestStyle));
+    const cat = group.cat, mats = res.materials.filter(([m]) => MATERIALS_FOR[cat].includes(m));
+    add.ai = {types, tone:bestTone, group:group.id, material:(mats[0] || res.materials[0])[0]};
+    if(!add.touched.style) setStyle(bestStyle);
+    if(!add.touched.tone) add.tone = bestTone;
+    if(!add.touched.material) add.material = add.ai.material;
+    renderAddChips(); refreshClean();
+    const conf = types[0][1];
+    scanStatus(conf > .6 ? `Detected: ${TONES[add.tone].name.toLowerCase()} ${nameWord(add.style)}. Check the details and tap to change anything.`
+      : `Best guess: ${nameWord(add.style)}. Not right? The ✦ marks show other likely types. Tap the right one.`);
+  } catch(err){
+    if(id !== add.scanId) return;
+    console.warn(err);
+    scanStatus(navigator.onLine === false ? "You're offline, so the photo can't be analysed right now. Pick the details below." : "The photo couldn't be analysed. Pick the details below.");
+  }
+}
+/* "My photo, cleaned": remove the background on this device */
+let cutTicket = 0;
+async function makeCutout(){
+  if(add.cut || !addCanvas) return;
+  const t = ++cutTicket, canvas = addCanvas;
+  scanStatus("Removing the background…");
+  try {
+    const scan = await import("./scan.js?v=20");
+    const cut = await scan.cutOut(canvas, f => { if(t === cutTicket) scanStatus("Getting the background remover ready (first time only)…", f); });
+    if(t !== cutTicket || canvas !== addCanvas) return;
+    add.cut = studioFromCutout(cut);
+    scanStatus("Background removed.");
+  } catch(err){
+    console.warn(err);
+    if(t === cutTicket) scanStatus("The background couldn't be removed. Your photo will be used as it is.");
+  }
+  renderPicChoice();
+}
+
 $("#add-form").addEventListener("submit", e => {
-  if(e.submitter && e.submitter.value === "cancel") return;
+  e.preventDefault();
   const name = $("#a-name").value.trim();
-  if(!name){ e.preventDefault(); $("#add-error").textContent = "Give the piece a name, for example \"White linen shirt\"."; $("#a-name").focus(); return; }
+  if(!name){ $("#add-error").textContent = "Give the piece a name, for example \"Grey hoodie\"."; $("#a-name").focus(); return; }
   const price = parsePrice($("#a-price").value);
-  if(!price.ok){ e.preventDefault(); $("#add-error").textContent = "Enter the price as a number, for example 29.95."; $("#a-price").focus(); return; }
-  const g = GROUPS.find(x => x.id === $("#a-group").value) || GROUPS[0];
-  const item = {id:"u" + Date.now(), name, cat:g.cat, style:$("#a-style").value, tone:$("#a-colour").value,
-    brand:$("#a-brand").value.trim(), size:$("#a-size").value.trim(), price:price.value, material:$("#a-material").value.trim()};
-  if(newImg) item.img = newImg;
+  if(!price.ok){ $("#add-error").textContent = "Enter the price as a number, for example 29.95."; $("#a-price").focus(); return; }
+  const g = GROUPS.find(x => x.id === add.group) || GROUPS[0];
+  const item = {id:"u" + Date.now(), name, cat:g.cat, style:add.style, tone:add.tone,
+    brand:$("#a-brand").value.trim(), size:add.size || "", price:price.value, material:add.material || ""};
+  const img = add.pic === "photo" ? (add.cut || add.photo) : add.clean;
+  if(img) item.img = img;
+  item.picMode = add.pic === "photo" ? "photo" : "clean";
   wardrobe.unshift(item);
-  saveWardrobe();
+  if(!saveWardrobe()){ wardrobe.shift(); $("#add-error").textContent = "This device is out of space for photos. Delete an item or use the clean studio picture."; return; }
+  $("#add-dialog").close();
   wardCat = g.id; wardSel = item.id; wardMode = "view";
   renderWardrobe();
   toast(`Added ${name} to your wardrobe`);

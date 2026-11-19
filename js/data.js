@@ -13,17 +13,36 @@ const TONES = {
   green:     {name:"Green",      hex:"#2f6b4f"},
   pink:      {name:"Pink",       hex:"#e7b7c0", light:true},
   silver:    {name:"Silver",     hex:"#c4c7cc", neutral:true, light:true},
-  gold:      {name:"Gold",       hex:"#c9a24a", neutral:true}
+  gold:      {name:"Gold",       hex:"#c9a24a", neutral:true},
+  charcoal:  {name:"Charcoal",   hex:"#3a3d42", neutral:true,  dark:true},
+  cream:     {name:"Cream",      hex:"#efe6d2", neutral:true,  light:true},
+  burgundy:  {name:"Burgundy",   hex:"#6b1f2e", dark:true},
+  yellow:    {name:"Yellow",     hex:"#e3bf3a", light:true},
+  orange:    {name:"Orange",     hex:"#d9762b"},
+  purple:    {name:"Purple",     hex:"#5e3f86"}
 };
 
 /* formal: 0 = casual, 1 = smart casual, 2 = formal */
 const STYLES = {
-  tee:{label:"T-shirt", formal:0}, shirt:{label:"Shirt (Button-up)", formal:2}, polo:{label:"Polo", formal:1},
-  hoodie:{label:"Hoodie", formal:0, warm:true}, sweatshirt:{label:"Sweatshirt", formal:0, warm:true},
-  jacket:{label:"Overshirt", formal:1, warm:true}, bomber:{label:"Jacket", formal:1, warm:true},
+  /* tops */
+  tee:{label:"T-shirt", formal:0}, longsleeve:{label:"Long-sleeve tee", formal:0}, tank:{label:"Tank top", formal:0},
+  henley:{label:"Henley", formal:0}, polo:{label:"Polo", formal:1}, shirt:{label:"Shirt (Button-up)", formal:2},
+  flannel:{label:"Flannel shirt", formal:1, warm:true}, denimshirt:{label:"Denim shirt", formal:1},
+  sweater:{label:"Sweater / Jumper", formal:1, warm:true}, cardigan:{label:"Cardigan", formal:1, warm:true}, turtleneck:{label:"Turtleneck", formal:1, warm:true},
+  hoodie:{label:"Hoodie", formal:0, warm:true}, ziphoodie:{label:"Zip hoodie", formal:0, warm:true}, sweatshirt:{label:"Sweatshirt", formal:0, warm:true},
+  jacket:{label:"Overshirt", formal:1, warm:true}, bomber:{label:"Jacket", formal:1, warm:true}, denimjacket:{label:"Denim jacket", formal:0, warm:true},
+  leatherjacket:{label:"Leather jacket", formal:1, warm:true}, puffer:{label:"Puffer jacket", formal:0, warm:true}, gilet:{label:"Gilet / Vest", formal:1, warm:true},
+  blazer:{label:"Blazer", formal:2}, coat:{label:"Coat", formal:2, warm:true},
+  /* bottoms */
   jeans:{label:"Jeans", formal:0}, chinos:{label:"Chinos", formal:1}, trousers:{label:"Trousers", formal:2}, shorts:{label:"Shorts", formal:0},
-  sneakers:{label:"Sneakers", formal:0}, boots:{label:"Boots", formal:1, warm:true}, loafers:{label:"Loafers", formal:2},
+  joggers:{label:"Joggers", formal:0}, cargo:{label:"Cargo pants", formal:0},
+  /* shoes */
+  sneakers:{label:"Sneakers", formal:0}, runners:{label:"Running shoes", formal:0}, boots:{label:"Boots", formal:1, warm:true},
+  chelsea:{label:"Chelsea boots", formal:1, warm:true}, loafers:{label:"Loafers", formal:2}, oxfords:{label:"Dress shoes", formal:2},
+  sandals:{label:"Sandals", formal:0}, slides:{label:"Slides", formal:0},
+  /* accessories */
   watch:{label:"Watch", formal:1}, belt:{label:"Belt", formal:1}, cap:{label:"Cap", formal:0},
+  beanie:{label:"Beanie", formal:0, warm:true}, hat:{label:"Bucket hat", formal:0},
   sunglasses:{label:"Sunglasses", formal:0}, glasses:{label:"Glasses", formal:1},
   chain:{label:"Chain", formal:0}, bracelet:{label:"Bracelet", formal:0}, ring:{label:"Ring", formal:1},
   tie:{label:"Tie", formal:2}, bowtie:{label:"Bow tie", formal:2}, scarf:{label:"Scarf", formal:1, warm:true},
@@ -32,13 +51,13 @@ const STYLES = {
 
 /* Wardrobe categories. cat = the slot the styling engine uses: top, bottom, shoes or acc (accessory). */
 const GROUPS = [
-  {id:"shirts",    label:"Shirts",    cat:"top",    styles:["shirt","tee","polo","hoodie","sweatshirt","jacket","bomber"]},
-  {id:"pants",     label:"Pants",     cat:"bottom", styles:["jeans","chinos","trousers","shorts"]},
-  {id:"shoes",     label:"Shoes",     cat:"shoes",  styles:["sneakers","boots","loafers"]},
+  {id:"shirts",    label:"Shirts",    cat:"top",    styles:["tee","longsleeve","tank","henley","polo","shirt","flannel","denimshirt","sweater","cardigan","turtleneck","hoodie","ziphoodie","sweatshirt","jacket","bomber","denimjacket","leatherjacket","puffer","gilet","blazer","coat"]},
+  {id:"pants",     label:"Pants",     cat:"bottom", styles:["jeans","chinos","trousers","shorts","joggers","cargo"]},
+  {id:"shoes",     label:"Shoes",     cat:"shoes",  styles:["sneakers","runners","boots","chelsea","loafers","oxfords","sandals","slides"]},
   {id:"scarves",   label:"Scarves",   cat:"acc",    styles:["scarf"]},
   {id:"watches",   label:"Watches",   cat:"acc",    styles:["watch"]},
   {id:"belts",     label:"Belts",     cat:"acc",    styles:["belt"]},
-  {id:"caps",      label:"Caps",      cat:"acc",    styles:["cap"]},
+  {id:"caps",      label:"Caps & Hats", cat:"acc",  styles:["cap","beanie","hat"]},
   {id:"glasses",   label:"Glasses",   cat:"acc",    styles:["sunglasses","glasses"]},
   {id:"jewellery", label:"Jewellery", cat:"acc",    styles:["chain","bracelet","ring"]},
   {id:"ties",      label:"Ties",      cat:"acc",    styles:["tie","bowtie"]},
@@ -48,7 +67,21 @@ const GROUPS = [
 function groupOf(item){
   return GROUPS.find(g => g.styles.includes(item.style)) || GROUPS.find(g => g.cat === item.cat) || GROUPS[0];
 }
-const MATERIALS = ["Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate"];
+const MATERIALS = ["Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Corduroy","Fleece","Nylon","Velvet","Tweed","Flannel","Jersey","Knit","Rubber","Mesh","Down","Faux leather","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate","Plastic"];
+/* Materials shown first for each slot when you add a piece */
+const MATERIALS_FOR = {
+  top:["Cotton","Linen","Wool","Knit","Fleece","Jersey","Flannel","Denim","Polyester","Leather","Nylon","Down","Cashmere","Silk","Corduroy","Velvet","Tweed"],
+  bottom:["Cotton","Denim","Wool","Linen","Polyester","Corduroy","Fleece","Nylon","Leather"],
+  shoes:["Leather","Suede","Canvas","Rubber","Mesh","Faux leather","Nylon"],
+  acc:["Leather","Stainless steel","Metal","Sterling silver","Gold-plated","Acetate","Plastic","Wool","Cashmere","Cotton","Silk","Satin","Knit","Velvet","Polyester"]
+};
+/* Size buttons for each slot */
+const SIZE_CHIPS = {
+  top:["XS","S","M","L","XL","XXL"],
+  bottom:["W28 L32","W30 L32","W32 L32","W34 L32","W36 L32","W38 L32"],
+  shoes:["EU 39","EU 40","EU 41","EU 42","EU 43","EU 44","EU 45","EU 46"],
+  acc:["One size","S","M","L"]
+};
 const SIZES = ["XS","S","M","L","XL","XXL","W30 L32","W32 L32","W34 L32","EU 40","EU 41","EU 42","EU 43","EU 44","EU 42–46","One size"];
 
 /* Photos: img/items/<name>.jpg (generated studio product photos). */
@@ -151,7 +184,10 @@ const SKIN = [
 function garmentSVG(item){
   const c = (TONES[item.tone] || TONES.grey).hex;
   const edge = c === "#ffffff" ? "#c8c8c8" : "none";
-  const s = item.style;
+  const ALIAS = {longsleeve:"tee", tank:"tee", henley:"polo", flannel:"shirt", denimshirt:"shirt", sweater:"sweatshirt", cardigan:"jacket", turtleneck:"sweatshirt",
+    ziphoodie:"hoodie", denimjacket:"jacket", leatherjacket:"jacket", blazer:"jacket", coat:"jacket", puffer:"bomber", gilet:"jacket",
+    joggers:"jeans", cargo:"jeans", runners:"sneakers", chelsea:"boots", oxfords:"loafers", sandals:"loafers", slides:"loafers", beanie:"cap", hat:"cap"};
+  const s = ALIAS[item.style] || item.style;
   let d = "";
   if(item.cat === "top"){
     const long = ["hoodie","jacket","shirt","sweatshirt","bomber"].includes(s);
