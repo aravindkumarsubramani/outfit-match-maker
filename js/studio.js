@@ -5,9 +5,8 @@
 /* Extra template photos, one per clothing type that has no sample product (made in Canva). */
 const TEMPLATE_EXTRA = ["henley","tank","sweater","cardigan","turtleneck","ziphoodie","sweatshirt","denimjacket","leatherjacket"]
   .map(st => ({style:st, tone:{denimjacket:"blue", leatherjacket:"charcoal"}[st] || "grey", img:"img/items/tpl-" + st + ".jpg"}))
-  /* Real photos for each colour button */
-  .concat([["gloves",["black","brown","tan","grey","navy"]], ["socks",["black","charcoal","grey","navy","white"]], ["scarf",["grey","navy","black","camel","burgundy"]]]
-    .flatMap(([st, tones]) => tones.map(t => ({style:st, tone:t, img:"img/items/tpl-" + st + "-" + t + ".jpg"}))));
+  /* Real photos behind the colour buttons */
+  .concat(Object.entries(PHOTO_OPTIONS).flatMap(([st, list]) => list.filter(o => !PHOTO_PENDING.has(o[1])).map(([tone, img]) => ({style:st, tone, img}))));
 /* Best template to recolour for each type (mid tones keep the folds visible) */
 const TEMPLATE_BASE = {tee:"grey-tee", shirt:"navy-shirt", hoodie:"red-hoodie", jeans:"blue-jeans", trousers:"grey-trousers",
   chinos:"beige-chinos", sneakers:"black-sneakers", boots:"tan-suede-boots", loafers:"brown-loafers", cap:"beige-cap", scarf:"grey-wool-scarf",
@@ -16,7 +15,7 @@ const TEMPLATE_BASE = {tee:"grey-tee", shirt:"navy-shirt", hoodie:"red-hoodie", 
 const TEMPLATE_SIMILAR = {longsleeve:"tee", tank:"tee", henley:"tee", flannel:"shirt", denimshirt:"shirt", sweater:"hoodie", sweatshirt:"hoodie",
   cardigan:"jacket", turtleneck:"hoodie", ziphoodie:"hoodie", denimjacket:"jacket", leatherjacket:"bomber", puffer:"bomber", gilet:"jacket",
   blazer:"jacket", coat:"jacket", joggers:"chinos", cargo:"chinos", runners:"sneakers", chelsea:"boots", oxfords:"loafers", sandals:"loafers",
-  slides:"loafers", beanie:"cap", hat:"cap"};
+  slides:"loafers", beanie:"cap", hat:"cap", beltcasual:"belt"};
 /* Metal and glass pieces look wrong when recoloured: use the closest real photo instead */
 const NO_RECOLOUR = ["watch","sunglasses","glasses","chain","bracelet","ring"];
 const STUDIO_SIZE = 480;

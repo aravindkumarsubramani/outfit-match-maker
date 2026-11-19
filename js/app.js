@@ -1033,8 +1033,17 @@ function nearestTone(hexOrTone, list){
   return [...list].sort((a, b) => labDist(lab, toLab(hexRgb(TONES[a].hex))) - labDist(lab, toLab(hexRgb(TONES[b].hex))))[0];
 }
 const materialsFor = (gid, cat) => MATERIALS_BY_GROUP[gid] || MATERIALS_FOR[cat];
+/* Photo colour buttons for a type, without photos that are not made yet */
+const photoOpts = st => (PHOTO_OPTIONS[st] || []).filter(o => !PHOTO_PENDING.has(o[1]));
+const optLabel = (o, gid) => o[2] || toneLabel(gid, o[0]);
+function pickOpt(tone){   // the photo button closest to a colour
+  const opts = photoOpts(add.style); if(!opts.length){ add.opt = null; return; }
+  let i = opts.findIndex(o => o[0] === tone);
+  if(i < 0) i = opts.findIndex(o => o[0] === nearestTone(tone, opts.map(x => x[0])));
+  add.opt = i; add.tone = opts[i][0];
+}
 const nameWord = st => ((STYLES[st] || {}).label || "").split(/[(/]/)[0].trim().toLowerCase();
-function autoName(){ return `${toneLabel(add.group, add.tone)} ${nameWord(add.style)}`.replace(/^Denim blue /, "Blue "); }
+function autoName(){ const o = photoOpts(add.style)[add.opt]; return `${!add.hex && o ? optLabel(o, add.group) : toneLabel(add.group, add.tone)} ${nameWord(add.style)}`.replace(/^Denim blue /, "Blue "); }
 function mySize(cat){
   if(cat === "top") return profile.shirt || "M";
   if(cat === "bottom") return [profile.pantWaist || "W32", profile.pantLength || "L32"].join(" ");
@@ -1054,11 +1063,15 @@ function renderAddChips(){
   $("#a-groups").innerHTML = GROUPS.map(x => radio("data-agroup", x.id, x.id === add.group, `${icon(x.id)} ${esc(x.label)}${ai.group === x.id ? aiMark : ""}`)).join("");
   const types = [...aiTypes, ...g.styles.filter(st => !aiTypes.includes(st))];
   $("#a-types").innerHTML = types.map(st => radio("data-astyle", st, st === add.style, `${esc(STYLES[st].label)}${aiTypes.includes(st) ? aiMark : ""}`)).join("");
-  const pal = paletteFor(g.id), aiTone = ai.tone ? (pal.includes(ai.tone) ? ai.tone : nearestTone(ai.tone, pal)) : null;
-  $("#a-tones").innerHTML = pal.map(k => radio("data-atone", k, !add.hex && k === add.tone, `${k === aiTone ? aiMark : ""}`,
-    ` style="--sw:${TONES[k].hex}" aria-label="${toneLabel(g.id, k)}" title="${toneLabel(g.id, k)}"`)).join("")
+  const opts = photoOpts(add.style), pal = paletteFor(g.id);
+  const aiTone = ai.tone ? (opts.length ? nearestTone(ai.tone, opts.map(o => o[0])) : pal.includes(ai.tone) ? ai.tone : nearestTone(ai.tone, pal)) : null;
+  $("#a-tones").innerHTML = (opts.length
+    ? opts.map((o, i) => radio("data-aopt", i, !add.hex && add.opt === i, `${o[0] === aiTone && opts.findIndex(x => x[0] === aiTone) === i ? aiMark : ""}`,
+        ` style="--sw:${TONES[o[0]].hex}" class="${/stripe/i.test(o[2] || "") ? "sw-stripes" : ""}" aria-label="${optLabel(o, g.id)}" title="${optLabel(o, g.id)}"`)).join("")
+    : pal.map(k => radio("data-atone", k, !add.hex && k === add.tone, `${k === aiTone ? aiMark : ""}`,
+        ` style="--sw:${TONES[k].hex}" aria-label="${toneLabel(g.id, k)}" title="${toneLabel(g.id, k)}"`)).join(""))
     + `<label class="sw-pick${add.hex ? " on" : ""}" title="Pick any colour" style="${add.hex ? "--sw:" + add.hex : ""}"><input type="color" id="a-pick" value="${add.hex || TONES[add.tone].hex}" aria-label="Pick any colour"></label>`;
-  $("#a-tone-name").textContent = add.hex ? `Custom (${add.hex.toUpperCase()})` : toneLabel(g.id, add.tone);
+  $("#a-tone-name").textContent = add.hex ? `Custom (${add.hex.toUpperCase()})` : (opts.length && add.opt != null && opts[add.opt]) ? optLabel(opts[add.opt], g.id) : toneLabel(g.id, add.tone);
   const short = MATERIALS_BY_GROUP[g.id], aiMat = ai.material;
   let mats = short ? [...short] : add.allMats ? MATERIALS : MATERIALS_FOR[g.cat].slice(0, 8);
   if(!short && aiMat && !mats.includes(aiMat)) mats = [aiMat, ...mats];
@@ -1082,7 +1095,10 @@ function renderPicChoice(){
 /* New clean picture whenever type or colour changes */
 let cleanTicket = 0;
 function refreshClean(){
-  const t = ++cleanTicket; add.clean = null; renderPicChoice();
+  const t = ++cleanTicket; add.clean = null;
+  const o = !add.hex && photoOpts(add.style)[add.opt];
+  if(o){ add.clean = o[1]; renderPicChoice(); return; }
+  renderPicChoice();
   cleanPicture(add.style, add.tone, add.hex).then(url => {
     if(t !== cleanTicket) return;
     add.clean = url; renderPicChoice();
@@ -1105,13 +1121,15 @@ function setStyle(st){
     if(!add.touched.size) add.size = mySize(g.cat);
   }
   add.style = st;
+  if(photoOpts(st).length && !add.hex) pickOpt(add.tone); else add.opt = null;
 }
 $("#add-dialog").addEventListener("click", e => {
-  const b = e.target.closest("[data-agroup],[data-astyle],[data-atone],[data-amat],[data-asize],[data-amore],[data-pic]"); if(!b) return;
+  const b = e.target.closest("[data-agroup],[data-astyle],[data-atone],[data-aopt],[data-amat],[data-asize],[data-amore],[data-pic]"); if(!b) return;
   const d = b.dataset;
   if(d.agroup){ const g = GROUPS.find(x => x.id === d.agroup); add.touched.style = true; setStyle(g.styles.includes(add.style) ? add.style : g.styles[0]); refreshClean(); }
   else if(d.astyle){ add.touched.style = true; setStyle(d.astyle); refreshClean(); }
   else if(d.atone){ add.touched.tone = true; add.tone = d.atone; add.hex = null; refreshClean(); }
+  else if(d.aopt !== undefined){ const o = photoOpts(add.style)[+d.aopt]; if(o){ add.touched.tone = true; add.opt = +d.aopt; add.tone = o[0]; add.hex = null; refreshClean(); } }
   else if(d.amat){ add.touched.material = true; add.material = d.amat; }
   else if(d.asize){ add.touched.size = true; add.size = d.asize; }
   else if(d.amore !== undefined){ add.allMats = true; }
@@ -1126,7 +1144,7 @@ $("#add-dialog").addEventListener("input", e => {
   const hex = e.target.value;
   add.hex = hex; add.tone = nearestTone(hex, Object.keys(TONES)); add.touched.tone = true;
   const lab = e.target.closest(".sw-pick"); lab.classList.add("on"); lab.style.setProperty("--sw", hex);
-  $$("#a-tones [data-atone]").forEach(b => b.setAttribute("aria-checked", "false"));
+  $$("#a-tones [data-atone],#a-tones [data-aopt]").forEach(b => b.setAttribute("aria-checked", "false"));
   $("#a-tone-name").textContent = `Custom (${hex.toUpperCase()})`;
   if(!add.nameTouched) $("#a-name").value = autoName();
   clearTimeout(pickT); pickT = setTimeout(refreshClean, 120);
@@ -1134,6 +1152,7 @@ $("#add-dialog").addEventListener("input", e => {
 
 $("#open-add").addEventListener("click", () => {
   resetAdd(GROUPS.find(g => g.id === wardCat) ? wardCat : "shirts");
+  add.opt = null; if(photoOpts(add.style).length) pickOpt(add.tone);
   $("#add-form").reset(); $("#add-error").textContent = ""; $("#a-photo").value = "";
   scanStatus(""); renderAddChips(); refreshClean();
   $("#add-dialog").showModal();
@@ -1162,11 +1181,11 @@ async function startScan(canvas){
   const id = ++add.scanId;
   let pix = [];
   try { pix = photoTones(canvas); } catch(err){}
-  if(pix.length && !add.touched.tone){ const pal = paletteFor(add.group); add.tone = pal.includes(pix[0][0]) ? pix[0][0] : nearestTone(pix[0][0], pal); add.hex = null; add.ai = {...(add.ai || {}), tone:pix[0][0]}; }
+  if(pix.length && !add.touched.tone){ const pal = paletteFor(add.group); add.tone = pal.includes(pix[0][0]) ? pix[0][0] : nearestTone(pix[0][0], pal); add.hex = null; pickOpt(pix[0][0]); add.ai = {...(add.ai || {}), tone:pix[0][0]}; }
   renderAddChips(); refreshClean(); renderPicChoice();
   scanStatus("Reading your photo…");
   try {
-    const scan = await import("./scan.js?v=21");
+    const scan = await import("./scan.js?v=22");
     const res = await scan.analysePhoto(canvas, f => { if(id === add.scanId) scanStatus("Getting the photo analyser ready (first time only)…", f); });
     if(id !== add.scanId) return;
     /* Colour: the analyser and the pixel colour together */
@@ -1180,7 +1199,7 @@ async function startScan(canvas){
     add.ai = {types, tone:bestTone, group:group.id, material:(mats[0] || res.materials[0])[0]};
     if(!add.touched.style) setStyle(bestStyle);
     const pal = paletteFor(add.group);
-    if(!add.touched.tone){ add.tone = pal.includes(bestTone) ? bestTone : nearestTone(bestTone, pal); add.hex = null; }
+    if(!add.touched.tone){ add.tone = pal.includes(bestTone) ? bestTone : nearestTone(bestTone, pal); add.hex = null; pickOpt(bestTone); }
     const ml = materialsFor(add.group, cat);
     if(!add.touched.material) add.material = ml.includes(add.ai.material) ? add.ai.material : (res.materials.find(([m]) => ml.includes(m)) || [ml[0]])[0];
     renderAddChips(); refreshClean();
@@ -1200,7 +1219,7 @@ async function makeCutout(){
   const t = ++cutTicket, canvas = addCanvas;
   scanStatus("Removing the background…");
   try {
-    const scan = await import("./scan.js?v=21");
+    const scan = await import("./scan.js?v=22");
     const cut = await scan.cutOut(canvas, f => { if(t === cutTicket) scanStatus("Getting the background remover ready (first time only)…", f); });
     if(t !== cutTicket || canvas !== addCanvas) return;
     add.cut = studioFromCutout(cut);

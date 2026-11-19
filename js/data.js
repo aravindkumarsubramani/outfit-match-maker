@@ -21,7 +21,10 @@ const TONES = {
   orange:    {name:"Orange",     hex:"#d9762b"},
   purple:    {name:"Purple",     hex:"#5e3f86"},
   tan:       {name:"Tan",        hex:"#a8774a", neutral:true},
-  camel:     {name:"Camel",      hex:"#b88a5a", neutral:true}
+  camel:     {name:"Camel",      hex:"#b88a5a", neutral:true},
+  walnut:    {name:"Walnut",     hex:"#7b4f2c", neutral:true},
+  tortoise:  {name:"Tortoiseshell", hex:"#6e4a2a", neutral:true},
+  clear:     {name:"Clear",      hex:"#e6ecef", neutral:true, light:true}
 };
 /* Colour buttons per category. Shirts and pants show the full list; others show their top colours + a colour picker. */
 const PALETTE_DEFAULT = ["white","black","grey","charcoal","navy","beige","cream","blue","lightblue","olive","brown","red","burgundy","green","pink","yellow","orange","purple","silver","gold"];
@@ -30,7 +33,24 @@ const COLOURS_FOR = {
   socks:   ["black","charcoal","grey","navy","white"],
   scarves: ["grey","navy","black","camel","burgundy"]
 };
-const COLOUR_LABEL = {gloves:{brown:"Dark brown"}};
+const COLOUR_LABEL = {gloves:{brown:"Dark brown"}, belts:{brown:"Dark brown"}};
+/* Colour buttons that each show a real photo: original photos first, then the new ones made in Canva.
+   Each item: [tone, photo, label (optional, when two buttons share a colour)] */
+const I_ = n => "img/items/" + n + ".jpg";
+const T_ = n => "img/items/tpl-" + n + ".jpg";
+const PHOTO_OPTIONS = {
+  gloves:     [["black", I_("black-leather-gloves")], ["brown", I_("brown-leather-gloves"), "Brown"], ["grey", I_("grey-knit-gloves")], ["tan", T_("gloves-tan")], ["navy", T_("gloves-navy")]],
+  socks:      [["white", I_("white-sports-socks")], ["black", I_("black-dress-socks")], ["navy", I_("navy-striped-socks"), "Navy stripes"], ["navy", T_("socks-navy")], ["charcoal", T_("socks-charcoal")], ["grey", T_("socks-grey")]],
+  scarf:      [["grey", I_("grey-wool-scarf")], ["navy", I_("navy-scarf")], ["camel", I_("camel-scarf")], ["burgundy", I_("s22-burgundy-wool-scarf")], ["black", T_("scarf-black")]],
+  belt:       [["black", I_("black-leather-belt")], ["brown", I_("brown-leather-belt"), "Dark brown"], ["walnut", T_("belt-walnut")], ["tan", T_("belt-tan")], ["navy", T_("belt-navy")]],
+  beltcasual: [["black", T_("beltc-black")], ["brown", T_("beltc-brown"), "Dark brown"], ["walnut", T_("beltc-walnut")], ["tan", T_("beltc-tan")], ["navy", T_("beltc-navy")]],
+  sunglasses: [["black", I_("black-sunglasses")], ["gold", I_("brown-aviators"), "Gold"], ["tortoise", T_("sun-tortoise")], ["silver", T_("sun-silver")], ["brown", T_("sun-brown")]],
+  glasses:    [["tortoise", I_("s16-tortoiseshell-glasses")], ["gold", I_("round-glasses")], ["clear", T_("glasses-clear")], ["silver", T_("glasses-silver"), "Silver half-frame"], ["brown", T_("glasses-brown")]],
+  tie:        [["navy", T_("tie-navy")], ["burgundy", T_("tie-burgundy")], ["black", T_("tie-black")], ["grey", T_("tie-grey")], ["lightblue", T_("tie-lightblue")]],
+  bowtie:     [["black", I_("black-bow-tie")], ["navy", I_("s21-navy-velvet-bow-tie")], ["burgundy", T_("bowtie-burgundy")], ["grey", T_("bowtie-grey")], ["lightblue", T_("bowtie-lightblue")]]
+};
+/* Photos of a new set that are not made yet are left out until they exist */
+const PHOTO_PENDING = new Set([]);
 
 /* formal: 0 = casual, 1 = smart casual, 2 = formal */
 const STYLES = {
@@ -51,7 +71,7 @@ const STYLES = {
   chelsea:{label:"Chelsea boots", formal:1, warm:true}, loafers:{label:"Loafers", formal:2}, oxfords:{label:"Dress shoes", formal:2},
   sandals:{label:"Sandals", formal:0}, slides:{label:"Slides", formal:0},
   /* accessories */
-  watch:{label:"Watch", formal:1}, belt:{label:"Belt", formal:1}, cap:{label:"Cap", formal:0},
+  watch:{label:"Watch", formal:1}, belt:{label:"Formal belt", formal:1}, beltcasual:{label:"Casual belt", formal:0}, cap:{label:"Cap", formal:0},
   beanie:{label:"Beanie", formal:0, warm:true}, hat:{label:"Bucket hat", formal:0},
   sunglasses:{label:"Sunglasses", formal:0}, glasses:{label:"Glasses", formal:1},
   chain:{label:"Chain", formal:0}, bracelet:{label:"Bracelet", formal:0}, ring:{label:"Ring", formal:1},
@@ -66,7 +86,7 @@ const GROUPS = [
   {id:"shoes",     label:"Shoes",     cat:"shoes",  styles:["sneakers","runners","boots","chelsea","loafers","oxfords","sandals","slides"]},
   {id:"scarves",   label:"Scarves",   cat:"acc",    styles:["scarf"]},
   {id:"watches",   label:"Watches",   cat:"acc",    styles:["watch"]},
-  {id:"belts",     label:"Belts",     cat:"acc",    styles:["belt"]},
+  {id:"belts",     label:"Belts",     cat:"acc",    styles:["belt","beltcasual"]},
   {id:"caps",      label:"Caps & Hats", cat:"acc",  styles:["cap","beanie","hat"]},
   {id:"glasses",   label:"Glasses",   cat:"acc",    styles:["sunglasses","glasses"]},
   {id:"jewellery", label:"Jewellery", cat:"acc",    styles:["chain","bracelet","ring"]},
@@ -77,7 +97,7 @@ const GROUPS = [
 function groupOf(item){
   return GROUPS.find(g => g.styles.includes(item.style)) || GROUPS.find(g => g.cat === item.cat) || GROUPS[0];
 }
-const MATERIALS = ["Wool knit","Merino wool","Bamboo","Nylon blend","Acrylic","Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Corduroy","Fleece","Nylon","Velvet","Tweed","Flannel","Jersey","Knit","Rubber","Mesh","Down","Faux leather","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate","Plastic"];
+const MATERIALS = ["Full-grain leather","Braided leather","Elastic","TR90","Wool knit","Merino wool","Bamboo","Nylon blend","Acrylic","Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Corduroy","Fleece","Nylon","Velvet","Tweed","Flannel","Jersey","Knit","Rubber","Mesh","Down","Faux leather","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate","Plastic"];
 /* Materials shown first for each slot when you add a piece */
 const MATERIALS_FOR = {
   top:["Cotton","Linen","Wool","Knit","Fleece","Jersey","Flannel","Denim","Polyester","Leather","Nylon","Down","Cashmere","Silk","Corduroy","Velvet","Tweed"],
@@ -87,6 +107,9 @@ const MATERIALS_FOR = {
 };
 /* Categories with a short, researched material list (only these are shown) */
 const MATERIALS_BY_GROUP = {
+  belts:   ["Full-grain leather","Suede","Braided leather","Canvas","Elastic"],
+  glasses: ["Acetate","Metal","Titanium","TR90","Plastic"],
+  ties:    ["Silk","Wool","Cotton","Linen","Polyester"],
   gloves:  ["Leather","Suede","Wool knit","Cashmere","Fleece"],
   socks:   ["Cotton","Merino wool","Bamboo","Nylon blend","Polyester"],
   scarves: ["Wool","Cashmere","Acrylic","Cotton","Silk"]
