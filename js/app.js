@@ -19,7 +19,14 @@ else if(store.get("mm-wardrobe-v", 1) < 4){
   store.set("mm-wardrobe", wardrobe);
   try { localStorage.removeItem("mm-board"); localStorage.removeItem("mm-saved"); } catch(e){}
 }
-store.set("mm-wardrobe-v", 4);
+/* Version 5: new default pieces are added; everything already in your wardrobe stays as it is */
+if(store.get("mm-wardrobe-v", 1) < 5){
+  const have = new Set(wardrobe.map(x => x.id));
+  const added = ["w17","w18","w21","w22","w23","w24","w25","w26","w27","w28","w29","w30","w31","w32","w33","w34","w35","w36","w37","w38","w39","w40","w41","w42","w43","a28","a29","a30","a31","a32","a33","a34","a35","a36","a37","a38"];
+  DEFAULT_WARDROBE.filter(x => added.includes(x.id) && !have.has(x.id)).forEach(x => wardrobe.push({...x}));
+  store.set("mm-wardrobe", wardrobe);
+}
+store.set("mm-wardrobe-v", 5);
 const PROFILE_DEFAULTS = {name:"Guest", age:"22", prefs:["Casual"], height:"175", weight:"70", shirt:"M", pantWaist:"W32", pantLength:"L32", shoe:"42"};
 let profile = store.get("mm-profile", {name:"", age:"", city:"", style:"Casual", colors:["black","white"], skin:""});
 /* Fill default values into any of these fields that are still empty */
@@ -1185,7 +1192,7 @@ async function startScan(canvas){
   renderAddChips(); refreshClean(); renderPicChoice();
   scanStatus("Reading your photo…");
   try {
-    const scan = await import("./scan.js?v=22");
+    const scan = await import("./scan.js?v=23");
     const res = await scan.analysePhoto(canvas, f => { if(id === add.scanId) scanStatus("Getting the photo analyser ready (first time only)…", f); });
     if(id !== add.scanId) return;
     /* Colour: the analyser and the pixel colour together */
@@ -1219,7 +1226,7 @@ async function makeCutout(){
   const t = ++cutTicket, canvas = addCanvas;
   scanStatus("Removing the background…");
   try {
-    const scan = await import("./scan.js?v=22");
+    const scan = await import("./scan.js?v=23");
     const cut = await scan.cutOut(canvas, f => { if(t === cutTicket) scanStatus("Getting the background remover ready (first time only)…", f); });
     if(t !== cutTicket || canvas !== addCanvas) return;
     add.cut = studioFromCutout(cut);

@@ -15,7 +15,7 @@ const TEMPLATE_BASE = {tee:"grey-tee", shirt:"navy-shirt", hoodie:"red-hoodie", 
 const TEMPLATE_SIMILAR = {longsleeve:"tee", tank:"tee", henley:"tee", flannel:"shirt", denimshirt:"shirt", sweater:"hoodie", sweatshirt:"hoodie",
   cardigan:"jacket", turtleneck:"hoodie", ziphoodie:"hoodie", denimjacket:"jacket", leatherjacket:"bomber", puffer:"bomber", gilet:"jacket",
   blazer:"jacket", coat:"jacket", joggers:"chinos", cargo:"chinos", runners:"sneakers", chelsea:"boots", oxfords:"loafers", sandals:"loafers",
-  slides:"loafers", beanie:"cap", hat:"cap", beltcasual:"belt"};
+  slides:"loafers", beanie:"cap", hat:"cap", beltcasual:"belt", oversized:"tee", gymtee:"tee", lungi:"chinos"};
 /* Metal and glass pieces look wrong when recoloured: use the closest real photo instead */
 const NO_RECOLOUR = ["watch","sunglasses","glasses","chain","bracelet","ring"];
 const STUDIO_SIZE = 480;

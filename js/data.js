@@ -24,7 +24,8 @@ const TONES = {
   camel:     {name:"Camel",      hex:"#b88a5a", neutral:true},
   walnut:    {name:"Walnut",     hex:"#7b4f2c", neutral:true},
   tortoise:  {name:"Tortoiseshell", hex:"#6e4a2a", neutral:true},
-  clear:     {name:"Clear",      hex:"#e6ecef", neutral:true, light:true}
+  clear:     {name:"Clear",      hex:"#e6ecef", neutral:true, light:true},
+  leopard:   {name:"Leopard print", hex:"#a77b45", neutral:true}
 };
 /* Colour buttons per category. Shirts and pants show the full list; others show their top colours + a colour picker. */
 const PALETTE_DEFAULT = ["white","black","grey","charcoal","navy","beige","cream","blue","lightblue","olive","brown","red","burgundy","green","pink","yellow","orange","purple","silver","gold"];
@@ -55,7 +56,7 @@ const PHOTO_PENDING = new Set([]);
 /* formal: 0 = casual, 1 = smart casual, 2 = formal */
 const STYLES = {
   /* tops */
-  tee:{label:"T-shirt", formal:0}, longsleeve:{label:"Long-sleeve tee", formal:0}, tank:{label:"Tank top", formal:0},
+  tee:{label:"T-shirt", formal:0}, oversized:{label:"Oversized T-shirt", formal:0}, gymtee:{label:"Gym T-shirt", formal:0}, longsleeve:{label:"Long-sleeve tee", formal:0}, tank:{label:"Tank top", formal:0},
   henley:{label:"Henley", formal:0}, polo:{label:"Polo", formal:1}, shirt:{label:"Shirt (Button-up)", formal:2},
   flannel:{label:"Flannel shirt", formal:1, warm:true}, denimshirt:{label:"Denim shirt", formal:1},
   sweater:{label:"Sweater / Jumper", formal:1, warm:true}, cardigan:{label:"Cardigan", formal:1, warm:true}, turtleneck:{label:"Turtleneck", formal:1, warm:true},
@@ -65,7 +66,7 @@ const STYLES = {
   blazer:{label:"Blazer", formal:2}, coat:{label:"Coat", formal:2, warm:true},
   /* bottoms */
   jeans:{label:"Jeans", formal:0}, chinos:{label:"Chinos", formal:1}, trousers:{label:"Trousers", formal:2}, shorts:{label:"Shorts", formal:0},
-  joggers:{label:"Joggers", formal:0}, cargo:{label:"Cargo pants", formal:0},
+  joggers:{label:"Joggers", formal:0}, lungi:{label:"Lungi / Mundu", formal:0}, cargo:{label:"Cargo pants", formal:0},
   /* shoes */
   sneakers:{label:"Sneakers", formal:0}, runners:{label:"Running shoes", formal:0}, boots:{label:"Boots", formal:1, warm:true},
   chelsea:{label:"Chelsea boots", formal:1, warm:true}, loafers:{label:"Loafers", formal:2}, oxfords:{label:"Dress shoes", formal:2},
@@ -81,8 +82,8 @@ const STYLES = {
 
 /* Wardrobe categories. cat = the slot the styling engine uses: top, bottom, shoes or acc (accessory). */
 const GROUPS = [
-  {id:"shirts",    label:"Shirts",    cat:"top",    styles:["tee","longsleeve","tank","henley","polo","shirt","flannel","denimshirt","sweater","cardigan","turtleneck","hoodie","ziphoodie","sweatshirt","jacket","bomber","denimjacket","leatherjacket","puffer","gilet","blazer","coat"]},
-  {id:"pants",     label:"Pants",     cat:"bottom", styles:["jeans","chinos","trousers","shorts","joggers","cargo"]},
+  {id:"shirts",    label:"Shirts",    cat:"top",    styles:["tee","oversized","gymtee","longsleeve","tank","henley","polo","shirt","flannel","denimshirt","sweater","cardigan","turtleneck","hoodie","ziphoodie","sweatshirt","jacket","bomber","denimjacket","leatherjacket","puffer","gilet","blazer","coat"]},
+  {id:"pants",     label:"Pants",     cat:"bottom", styles:["jeans","chinos","trousers","shorts","joggers","cargo","lungi"]},
   {id:"shoes",     label:"Shoes",     cat:"shoes",  styles:["sneakers","runners","boots","chelsea","loafers","oxfords","sandals","slides"]},
   {id:"scarves",   label:"Scarves",   cat:"acc",    styles:["scarf"]},
   {id:"watches",   label:"Watches",   cat:"acc",    styles:["watch"]},
@@ -132,18 +133,43 @@ const DEFAULT_WARDROBE = [
   {id:"w3",  name:"Grey tee",          cat:"top",    style:"tee",      tone:"grey",   brand:"Daily Basics",            size:"M",        price:9.99,   material:"Cotton",  img:P("grey-tee")},
   {id:"w4",  name:"Red hoodie",        cat:"top",    style:"hoodie",   tone:"red",    brand:"Fieldhouse",       size:"M",        price:59.95,  material:"Cotton",  img:P("red-hoodie")},
   {id:"w5",  name:"Olive overshirt",   cat:"top",    style:"jacket",   tone:"olive",  brand:"Workwell",       size:"M",        price:79.00,  material:"Cotton",  img:P("olive-overshirt")},
+  {id:"w23", name:"Light blue shirt",  cat:"top",    style:"shirt",    tone:"lightblue", brand:"Basico",       size:"M",        price:34.90,  material:"Cotton",  img:P("new-lightblue-shirt")},
+  {id:"w24", name:"Grey shirt",        cat:"top",    style:"shirt",    tone:"grey",   brand:"Basico",         size:"M",        price:34.90,  material:"Cotton",  img:P("new-grey-shirt")},
+  {id:"w25", name:"Leopard print shirt", cat:"top",  style:"shirt",    tone:"leopard", brand:"Moderno",       size:"M",        price:39.95,  material:"Polyester", img:P("new-leopard-shirt")},
+  {id:"w26", name:"Olive half-sleeve shirt", cat:"top", style:"shirt", tone:"olive",  brand:"Workwell",       size:"M",        price:29.95,  material:"Linen",   img:P("new-olive-halfsleeve-shirt")},
+  {id:"w27", name:"White T-shirt",     cat:"top",    style:"tee",      tone:"white",  brand:"Daily Basics",   size:"M",        price:12.99,  material:"Cotton",  img:P("new-white-tee")},
+  {id:"w28", name:"Black T-shirt",     cat:"top",    style:"tee",      tone:"black",  brand:"Daily Basics",   size:"M",        price:12.99,  material:"Cotton",  img:P("new-black-tee")},
+  {id:"w29", name:"Black oversized T-shirt", cat:"top", style:"oversized", tone:"black", brand:"Weekend Lab",   size:"L",        price:24.95,  material:"Cotton",  img:P("new-black-oversized-tee")},
+  {id:"w30", name:"Blue oversized T-shirt", cat:"top", style:"oversized", tone:"blue", brand:"Weekend Lab",    size:"L",        price:24.95,  material:"Cotton",  img:P("new-blue-oversized-tee")},
+  {id:"w31", name:"Red polo",          cat:"top",    style:"polo",     tone:"red",    brand:"Moderno",        size:"M",        price:24.95,  material:"Cotton",  img:P("new-red-polo")},
+  {id:"w32", name:"Brown polo",        cat:"top",    style:"polo",     tone:"brown",  brand:"Moderno",        size:"M",        price:24.95,  material:"Cotton",  img:P("new-brown-polo")},
+  {id:"w33", name:"White polo",        cat:"top",    style:"polo",     tone:"white",  brand:"Moderno",        size:"M",        price:24.95,  material:"Cotton",  img:P("new-white-polo")},
+  {id:"w34", name:"Black gym T-shirt", cat:"top",    style:"gymtee",   tone:"black",  brand:"Stride",         size:"M",        price:19.95,  material:"Nylon",   img:P("new-black-gym-tee")},
+  {id:"w35", name:"Silver hoodie",     cat:"top",    style:"hoodie",   tone:"silver", brand:"Fieldhouse",     size:"M",        price:49.95,  material:"Cotton",  img:P("new-silver-hoodie")},
+  {id:"w36", name:"Grey hoodie",       cat:"top",    style:"hoodie",   tone:"grey",   brand:"Fieldhouse",     size:"M",        price:49.95,  material:"Cotton",  img:P("new-grey-hoodie")},
   /* Pants */
   {id:"w6",  name:"Beige chinos",      cat:"bottom", style:"chinos",   tone:"beige",  brand:"Chinova",        size:"W32 L32",  price:69.95,  material:"Cotton",  img:P("beige-chinos"), fav:true},
   {id:"w7",  name:"Black jeans",       cat:"bottom", style:"jeans",    tone:"black",  brand:"Denimco",         size:"W32 L32",  price:99.95,  material:"Denim",   img:P("black-jeans")},
   {id:"w8",  name:"Blue jeans",        cat:"bottom", style:"jeans",    tone:"blue",   brand:"Denimco",         size:"W32 L32",  price:99.95,  material:"Denim",   img:P("blue-jeans")},
   {id:"w9",  name:"Grey trousers",     cat:"bottom", style:"trousers", tone:"grey",   brand:"Casa Fina",  size:"W32 L32",  price:79.95,  material:"Wool",    img:P("grey-trousers")},
   {id:"w10", name:"Navy chinos",       cat:"bottom", style:"chinos",   tone:"navy",   brand:"Basico",         size:"W32 L32",  price:39.90,  material:"Cotton",  img:P("navy-chinos")},
+  {id:"w37", name:"White joggers",     cat:"bottom", style:"joggers",  tone:"white",  brand:"Stride",         size:"M",        price:34.95,  material:"Cotton",  img:P("new-white-joggers")},
+  {id:"w38", name:"Black track pants", cat:"bottom", style:"joggers",  tone:"black",  brand:"Stride",         size:"M",        price:34.95,  material:"Polyester", img:P("new-black-trackpants")},
+  {id:"w39", name:"Black lungi",       cat:"bottom", style:"lungi",    tone:"black",  brand:"Coastline",      size:"One size", price:14.99,  material:"Cotton",  img:P("new-black-lungi")},
+  {id:"w40", name:"Grey lungi",        cat:"bottom", style:"lungi",    tone:"grey",   brand:"Coastline",      size:"One size", price:14.99,  material:"Cotton",  img:P("new-grey-lungi")},
+  {id:"w41", name:"Blue lungi",        cat:"bottom", style:"lungi",    tone:"blue",   brand:"Coastline",      size:"One size", price:14.99,  material:"Cotton",  img:P("new-blue-lungi")},
+  {id:"w42", name:"Grey shorts",       cat:"bottom", style:"shorts",   tone:"grey",   brand:"Basico",         size:"M",        price:19.95,  material:"Cotton",  img:P("new-grey-shorts")},
+  {id:"w43", name:"Black shorts",      cat:"bottom", style:"shorts",   tone:"black",  brand:"Basico",         size:"M",        price:19.95,  material:"Cotton",  img:P("new-black-shorts")},
   /* Shoes */
   {id:"w11", name:"White sneakers",    cat:"shoes",  style:"sneakers", tone:"white",  brand:"Trackline",         size:"EU 42",    price:99.95,  material:"Leather", img:P("white-sneakers"), fav:true},
   {id:"w12", name:"Black sneakers",    cat:"shoes",  style:"sneakers", tone:"black",  brand:"Kickflip",           size:"EU 42",    price:74.95,  material:"Canvas",  img:P("black-sneakers")},
   {id:"w13", name:"Brown loafers",     cat:"shoes",  style:"loafers",  tone:"brown",  brand:"Stepwell",         size:"EU 42",    price:119.95, material:"Leather", img:P("brown-loafers")},
   {id:"w14", name:"Black boots",       cat:"shoes",  style:"boots",    tone:"black",  brand:"Bootworks",    size:"EU 42",    price:189.00, material:"Leather", img:P("black-boots")},
   {id:"w15", name:"Tan suede boots",   cat:"shoes",  style:"boots",    tone:"brown",  brand:"Trailhaus",     size:"EU 42",    price:149.00, material:"Suede",   img:P("tan-suede-boots")},
+  {id:"w17", name:"Grey sneakers",     cat:"shoes",  style:"sneakers", tone:"grey",   brand:"Trackline",     size:"EU 42",    price:79.95,  material:"Mesh",    img:P("new-grey-sneakers")},
+  {id:"w18", name:"Grey sneakers, white sole", cat:"shoes", style:"sneakers", tone:"grey", brand:"Stride",     size:"EU 42",    price:89.95,  material:"Suede",   img:P("new-grey-white-sneakers")},
+  {id:"w22", name:"Black formal shoes", cat:"shoes", style:"oxfords", tone:"black", brand:"Stepwell",    size:"EU 42",    price:129.95, material:"Leather", img:P("new-black-formal-shoes")},
+  {id:"w21", name:"Blue slides",       cat:"shoes",  style:"slides",   tone:"blue",   brand:"Stride",        size:"EU 42",    price:29.95,  material:"Rubber",  img:P("new-blue-slides")},
   /* Watches */
   {id:"a1",  name:"Silver watch",      cat:"acc", style:"watch",      tone:"silver", brand:"Quartzy",             size:"One size", price:59.95,  material:"Stainless steel", img:P("silver-watch")},
   {id:"a2",  name:"Black leather watch", cat:"acc", style:"watch",    tone:"black",  brand:"Minute & Co", size:"One size", price:129.00, material:"Leather",         img:P("black-leather-watch")},
@@ -179,7 +205,19 @@ const DEFAULT_WARDROBE = [
   /* Socks */
   {id:"a25", name:"White sports socks", cat:"acc", style:"socks",     tone:"white",  brand:"Stride",              size:"EU 42–46", price:14.99,  material:"Cotton",          img:P("white-sports-socks")},
   {id:"a26", name:"Black dress socks", cat:"acc", style:"socks",      tone:"black",  brand:"Sockery",             size:"EU 42–46", price:15.00,  material:"Cotton",          img:P("black-dress-socks")},
-  {id:"a27", name:"Navy striped socks", cat:"acc", style:"socks",     tone:"navy",   brand:"Joy Socks",       size:"EU 42–46", price:12.95,  material:"Cotton",          img:P("navy-striped-socks")}
+  {id:"a27", name:"Navy striped socks", cat:"acc", style:"socks",     tone:"navy",   brand:"Joy Socks",       size:"EU 42–46", price:12.95,  material:"Cotton",          img:P("navy-striped-socks")},
+  /* Added in version 5 */
+  {id:"a28", name:"Rimless glasses",   cat:"acc", style:"glasses",    tone:"clear",  brand:"Optica",            size:"One size", price:129.00, material:"Titanium",        img:P("new-rimless-glasses")},
+  {id:"a29", name:"Blue lens sunglasses", cat:"acc", style:"sunglasses", tone:"blue", brand:"Sunline",          size:"One size", price:89.00,  material:"Metal",           img:P("new-blue-sunglasses")},
+  {id:"a30", name:"Sports sunglasses", cat:"acc", style:"sunglasses", tone:"black",  brand:"Stride",            size:"One size", price:69.00,  material:"TR90",            img:P("new-sports-sunglasses")},
+  {id:"a31", name:"Silver chain bracelet", cat:"acc", style:"bracelet", tone:"silver", brand:"Silverleaf",      size:"One size", price:59.00,  material:"Stainless steel", img:P("new-silver-chain-bracelet")},
+  {id:"a32", name:"Black chain bracelet", cat:"acc", style:"bracelet", tone:"black", brand:"Silverleaf",        size:"One size", price:49.00,  material:"Stainless steel", img:P("new-black-chain-bracelet")},
+  {id:"a33", name:"Silver bangle",     cat:"acc", style:"bracelet",   tone:"silver", brand:"Lumen Jewels",      size:"One size", price:45.00,  material:"Sterling silver", img:P("new-silver-bangle")},
+  {id:"a34", name:"Grey beanie",       cat:"acc", style:"beanie",     tone:"grey",   brand:"Nordic Knit",       size:"One size", price:19.90,  material:"Knit",            img:P("new-grey-beanie")},
+  {id:"a35", name:"Square smartwatch", cat:"acc", style:"watch",      tone:"black",  brand:"Pulse",             size:"One size", price:199.00, material:"Rubber",          img:P("new-square-smartwatch")},
+  {id:"a36", name:"Black analog-digital watch", cat:"acc", style:"watch", tone:"black", brand:"Quartzy",        size:"One size", price:89.00,  material:"Rubber",          img:P("new-anadigi-watch")},
+  {id:"a37", name:"Olive strap watch", cat:"acc", style:"watch",      tone:"olive",  brand:"Fieldtime",         size:"One size", price:79.00,  material:"Rubber",          img:P("new-olive-watch")},
+  {id:"a38", name:"Orange strap watch", cat:"acc", style:"watch",     tone:"orange", brand:"Fieldtime",         size:"One size", price:79.00,  material:"Rubber",          img:P("new-orange-watch")}
 ];
 
 /* Sample partner products. Shop names are placeholders for the prototype. */
@@ -225,7 +263,7 @@ function garmentSVG(item){
   const edge = c === "#ffffff" ? "#c8c8c8" : "none";
   const ALIAS = {longsleeve:"tee", tank:"tee", henley:"polo", flannel:"shirt", denimshirt:"shirt", sweater:"sweatshirt", cardigan:"jacket", turtleneck:"sweatshirt",
     ziphoodie:"hoodie", denimjacket:"jacket", leatherjacket:"jacket", blazer:"jacket", coat:"jacket", puffer:"bomber", gilet:"jacket",
-    joggers:"jeans", cargo:"jeans", runners:"sneakers", chelsea:"boots", oxfords:"loafers", sandals:"loafers", slides:"loafers", beanie:"cap", hat:"cap"};
+    joggers:"jeans", cargo:"jeans", lungi:"jeans", oversized:"tee", gymtee:"tee", runners:"sneakers", chelsea:"boots", oxfords:"loafers", sandals:"loafers", slides:"loafers", beanie:"cap", hat:"cap"};
   const s = ALIAS[item.style] || item.style;
   let d = "";
   if(item.cat === "top"){
