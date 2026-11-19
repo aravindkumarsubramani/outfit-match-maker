@@ -931,7 +931,7 @@ function itemViewHTML(it){
       ${row("shirts", "Type", styleLabel(it) ? `${icon(groupOf(it).id, "sm")} ${esc(styleLabel(it))}` : "")}
       ${row("ruler", "Size", esc(it.size || ""))}
       ${row("layers", "Material", esc(it.material || ""))}
-      ${row("palette", "Colour", tone ? `<i class="dot" style="background:${tone.hex}"></i> ${tone.name}` : "")}
+      ${row("palette", "Colour", it.hex ? `<i class="dot" style="background:${it.hex}"></i> Custom (${esc(it.hex.toUpperCase())})` : tone ? `<i class="dot" style="background:${tone.hex}"></i> ${toneLabel(groupOf(it).id, it.tone)}` : "")}
       ${row("tag", "Price", money(it.price) ? `<strong>${money(it.price)}</strong>` : "")}
     </dl>
     <button type="button" class="btn-primary wd-use" data-use-outfit>${icon("hanger")} Use in Outfit</button>
@@ -1009,6 +1009,7 @@ function detailSubmit(e){
     else if(board[it.cat] && board[it.cat].id === it.id) board[it.cat] = null;
   }
   const tone = $("#e-tone").value, looksChanged = style !== it.style || tone !== it.tone;
+  if(tone !== it.tone) delete it.hex;
   Object.assign(it, {name, cat, style, tone, brand:$("#e-brand").value.trim(), size:$("#e-size").value.trim(), price:price.value, material:$("#e-material").value.trim()});
   saveWardrobe(); saveBoard();
   if(looksChanged && it.picMode === "clean") cleanPicture(style, tone).then(url => { if(url){ it.img = url; saveWardrobe(); renderWardrobe(); if($("#item-dialog").open) openItem(it.id); } }).catch(() => {});
@@ -1024,8 +1025,16 @@ $("#item-dialog").addEventListener("close", () => { if(!wardWide()){ wardSel = n
 
 /* Add clothes: take a photo → the app reads type, colour and material → you tap to confirm → clean studio picture */
 const add = {};
+const paletteFor = gid => COLOURS_FOR[gid] || PALETTE_DEFAULT;
+const toneLabel = (gid, t) => (COLOUR_LABEL[gid] || {})[t] || TONES[t].name;
+/* Closest colour from a list, by how the colours look */
+function nearestTone(hexOrTone, list){
+  const lab = toLab(hexRgb(TONES[hexOrTone] ? TONES[hexOrTone].hex : hexOrTone));
+  return [...list].sort((a, b) => labDist(lab, toLab(hexRgb(TONES[a].hex))) - labDist(lab, toLab(hexRgb(TONES[b].hex))))[0];
+}
+const materialsFor = (gid, cat) => MATERIALS_BY_GROUP[gid] || MATERIALS_FOR[cat];
 const nameWord = st => ((STYLES[st] || {}).label || "").split(/[(/]/)[0].trim().toLowerCase();
-function autoName(){ return `${TONES[add.tone].name} ${nameWord(add.style)}`.replace(/^Denim blue /, "Blue "); }
+function autoName(){ return `${toneLabel(add.group, add.tone)} ${nameWord(add.style)}`.replace(/^Denim blue /, "Blue "); }
 function mySize(cat){
   if(cat === "top") return profile.shirt || "M";
   if(cat === "bottom") return [profile.pantWaist || "W32", profile.pantLength || "L32"].join(" ");
@@ -1034,7 +1043,7 @@ function mySize(cat){
 }
 function resetAdd(gid){
   const g = GROUPS.find(x => x.id === gid) || GROUPS[0];
-  Object.assign(add, {group:g.id, style:g.styles[0], tone:"black", material:MATERIALS_FOR[g.cat][0], size:mySize(g.cat),
+  Object.assign(add, {group:g.id, style:g.styles[0], tone:paletteFor(g.id)[0], hex:null, material:materialsFor(g.id, g.cat)[0], size:mySize(g.cat),
     photo:null, cut:null, clean:null, pic:"clean", ai:null, touched:{}, nameTouched:false, scanId:(add.scanId || 0) + 1, allMats:false});
 }
 const radio = (attr, val, on, label, extra = "") => `<button type="button" role="radio" ${attr}="${esc(val)}" aria-checked="${on}"${extra}>${label}</button>`;
@@ -1045,16 +1054,17 @@ function renderAddChips(){
   $("#a-groups").innerHTML = GROUPS.map(x => radio("data-agroup", x.id, x.id === add.group, `${icon(x.id)} ${esc(x.label)}${ai.group === x.id ? aiMark : ""}`)).join("");
   const types = [...aiTypes, ...g.styles.filter(st => !aiTypes.includes(st))];
   $("#a-types").innerHTML = types.map(st => radio("data-astyle", st, st === add.style, `${esc(STYLES[st].label)}${aiTypes.includes(st) ? aiMark : ""}`)).join("");
-  const aiTone = ai.tone;
-  $("#a-tones").innerHTML = Object.entries(TONES).map(([k, t]) => radio("data-atone", k, k === add.tone, `${k === aiTone ? aiMark : ""}`,
-    ` style="--sw:${t.hex}" aria-label="${t.name}" title="${t.name}"`)).join("");
-  $("#a-tone-name").textContent = TONES[add.tone].name;
-  const base = MATERIALS_FOR[g.cat], aiMat = ai.material;
-  let mats = add.allMats ? MATERIALS : base.slice(0, 8);
-  if(aiMat && !mats.includes(aiMat)) mats = [aiMat, ...mats];
-  if(add.material && !mats.includes(add.material)) mats = [add.material, ...mats];
+  const pal = paletteFor(g.id), aiTone = ai.tone ? (pal.includes(ai.tone) ? ai.tone : nearestTone(ai.tone, pal)) : null;
+  $("#a-tones").innerHTML = pal.map(k => radio("data-atone", k, !add.hex && k === add.tone, `${k === aiTone ? aiMark : ""}`,
+    ` style="--sw:${TONES[k].hex}" aria-label="${toneLabel(g.id, k)}" title="${toneLabel(g.id, k)}"`)).join("")
+    + `<label class="sw-pick${add.hex ? " on" : ""}" title="Pick any colour" style="${add.hex ? "--sw:" + add.hex : ""}"><input type="color" id="a-pick" value="${add.hex || TONES[add.tone].hex}" aria-label="Pick any colour"></label>`;
+  $("#a-tone-name").textContent = add.hex ? `Custom (${add.hex.toUpperCase()})` : toneLabel(g.id, add.tone);
+  const short = MATERIALS_BY_GROUP[g.id], aiMat = ai.material;
+  let mats = short ? [...short] : add.allMats ? MATERIALS : MATERIALS_FOR[g.cat].slice(0, 8);
+  if(!short && aiMat && !mats.includes(aiMat)) mats = [aiMat, ...mats];
+  if(!short && add.material && !mats.includes(add.material)) mats = [add.material, ...mats];
   $("#a-mats").innerHTML = mats.map(m => radio("data-amat", m, m === add.material, `${esc(m)}${m === aiMat ? aiMark : ""}`)).join("")
-    + (add.allMats ? "" : `<button type="button" class="chip-more" data-amore>More…</button>`);
+    + (short || add.allMats ? "" : `<button type="button" class="chip-more" data-amore>More…</button>`);
   const sizes = [...SIZE_CHIPS[g.cat]]; if(add.size && !sizes.includes(add.size)) sizes.unshift(add.size);
   $("#a-sizes").innerHTML = sizes.map(sz => radio("data-asize", sz, sz === add.size, esc(sz))).join("");
   if(!add.nameTouched) $("#a-name").value = autoName();
@@ -1073,7 +1083,7 @@ function renderPicChoice(){
 let cleanTicket = 0;
 function refreshClean(){
   const t = ++cleanTicket; add.clean = null; renderPicChoice();
-  cleanPicture(add.style, add.tone).then(url => {
+  cleanPicture(add.style, add.tone, add.hex).then(url => {
     if(t !== cleanTicket) return;
     add.clean = url; renderPicChoice();
   }).catch(() => { if(t === cleanTicket){ add.clean = null; $("#pc-clean").innerHTML = pic({cat:GROUPS.find(g => g.id === add.group).cat, style:add.style, tone:add.tone}); } });
@@ -1088,7 +1098,10 @@ function setStyle(st){
   const g = GROUPS.find(x => x.styles.includes(st)); if(!g) return;
   if(g.id !== add.group){
     add.group = g.id;
-    if(!add.touched.material) add.material = MATERIALS_FOR[g.cat][0];
+    const pal = paletteFor(g.id);
+    if(!add.hex && !pal.includes(add.tone)) add.tone = nearestTone(add.tone, pal);
+    const ml = materialsFor(g.id, g.cat);
+    if(!add.touched.material || !ml.includes(add.material)) add.material = (add.ai && ml.includes(add.ai.material)) ? add.ai.material : ml[0];
     if(!add.touched.size) add.size = mySize(g.cat);
   }
   add.style = st;
@@ -1098,7 +1111,7 @@ $("#add-dialog").addEventListener("click", e => {
   const d = b.dataset;
   if(d.agroup){ const g = GROUPS.find(x => x.id === d.agroup); add.touched.style = true; setStyle(g.styles.includes(add.style) ? add.style : g.styles[0]); refreshClean(); }
   else if(d.astyle){ add.touched.style = true; setStyle(d.astyle); refreshClean(); }
-  else if(d.atone){ add.touched.tone = true; add.tone = d.atone; refreshClean(); }
+  else if(d.atone){ add.touched.tone = true; add.tone = d.atone; add.hex = null; refreshClean(); }
   else if(d.amat){ add.touched.material = true; add.material = d.amat; }
   else if(d.asize){ add.touched.size = true; add.size = d.asize; }
   else if(d.amore !== undefined){ add.allMats = true; }
@@ -1106,6 +1119,18 @@ $("#add-dialog").addEventListener("click", e => {
   renderAddChips();
 });
 $("#a-name").addEventListener("input", () => { add.nameTouched = $("#a-name").value.trim() !== ""; });
+/* Colour picker: any colour; the closest named colour is kept for outfit matching */
+let pickT = null;
+$("#add-dialog").addEventListener("input", e => {
+  if(e.target.id !== "a-pick") return;
+  const hex = e.target.value;
+  add.hex = hex; add.tone = nearestTone(hex, Object.keys(TONES)); add.touched.tone = true;
+  const lab = e.target.closest(".sw-pick"); lab.classList.add("on"); lab.style.setProperty("--sw", hex);
+  $$("#a-tones [data-atone]").forEach(b => b.setAttribute("aria-checked", "false"));
+  $("#a-tone-name").textContent = `Custom (${hex.toUpperCase()})`;
+  if(!add.nameTouched) $("#a-name").value = autoName();
+  clearTimeout(pickT); pickT = setTimeout(refreshClean, 120);
+});
 
 $("#open-add").addEventListener("click", () => {
   resetAdd(GROUPS.find(g => g.id === wardCat) ? wardCat : "shirts");
@@ -1137,11 +1162,11 @@ async function startScan(canvas){
   const id = ++add.scanId;
   let pix = [];
   try { pix = photoTones(canvas); } catch(err){}
-  if(pix.length && !add.touched.tone){ add.tone = pix[0][0]; add.ai = {...(add.ai || {}), tone:pix[0][0]}; }
+  if(pix.length && !add.touched.tone){ const pal = paletteFor(add.group); add.tone = pal.includes(pix[0][0]) ? pix[0][0] : nearestTone(pix[0][0], pal); add.hex = null; add.ai = {...(add.ai || {}), tone:pix[0][0]}; }
   renderAddChips(); refreshClean(); renderPicChoice();
   scanStatus("Reading your photo…");
   try {
-    const scan = await import("./scan.js?v=20");
+    const scan = await import("./scan.js?v=21");
     const res = await scan.analysePhoto(canvas, f => { if(id === add.scanId) scanStatus("Getting the photo analyser ready (first time only)…", f); });
     if(id !== add.scanId) return;
     /* Colour: the analyser and the pixel colour together */
@@ -1154,11 +1179,13 @@ async function startScan(canvas){
     const cat = group.cat, mats = res.materials.filter(([m]) => MATERIALS_FOR[cat].includes(m));
     add.ai = {types, tone:bestTone, group:group.id, material:(mats[0] || res.materials[0])[0]};
     if(!add.touched.style) setStyle(bestStyle);
-    if(!add.touched.tone) add.tone = bestTone;
-    if(!add.touched.material) add.material = add.ai.material;
+    const pal = paletteFor(add.group);
+    if(!add.touched.tone){ add.tone = pal.includes(bestTone) ? bestTone : nearestTone(bestTone, pal); add.hex = null; }
+    const ml = materialsFor(add.group, cat);
+    if(!add.touched.material) add.material = ml.includes(add.ai.material) ? add.ai.material : (res.materials.find(([m]) => ml.includes(m)) || [ml[0]])[0];
     renderAddChips(); refreshClean();
     const conf = types[0][1];
-    scanStatus(conf > .6 ? `Detected: ${TONES[add.tone].name.toLowerCase()} ${nameWord(add.style)}. Check the details and tap to change anything.`
+    scanStatus(conf > .6 ? `Detected: ${toneLabel(add.group, add.tone).toLowerCase()} ${nameWord(add.style)}. Check the details and tap to change anything.`
       : `Best guess: ${nameWord(add.style)}. Not right? The ✦ marks show other likely types. Tap the right one.`);
   } catch(err){
     if(id !== add.scanId) return;
@@ -1173,7 +1200,7 @@ async function makeCutout(){
   const t = ++cutTicket, canvas = addCanvas;
   scanStatus("Removing the background…");
   try {
-    const scan = await import("./scan.js?v=20");
+    const scan = await import("./scan.js?v=21");
     const cut = await scan.cutOut(canvas, f => { if(t === cutTicket) scanStatus("Getting the background remover ready (first time only)…", f); });
     if(t !== cutTicket || canvas !== addCanvas) return;
     add.cut = studioFromCutout(cut);
@@ -1196,6 +1223,7 @@ $("#add-form").addEventListener("submit", e => {
     brand:$("#a-brand").value.trim(), size:add.size || "", price:price.value, material:add.material || ""};
   const img = add.pic === "photo" ? (add.cut || add.photo) : add.clean;
   if(img) item.img = img;
+  if(add.hex) item.hex = add.hex;
   item.picMode = add.pic === "photo" ? "photo" : "clean";
   wardrobe.unshift(item);
   if(!saveWardrobe()){ wardrobe.shift(); $("#add-error").textContent = "This device is out of space for photos. Delete an item or use the clean studio picture."; return; }

@@ -3,7 +3,11 @@
    - My photo, cleaned: the user's own photo with the background removed, centred on the studio background. */
 
 /* Extra template photos, one per clothing type that has no sample product (made in Canva). */
-const TEMPLATE_EXTRA = [];
+const TEMPLATE_EXTRA = ["henley","tank","sweater","cardigan","turtleneck","ziphoodie","sweatshirt","denimjacket","leatherjacket"]
+  .map(st => ({style:st, tone:{denimjacket:"blue", leatherjacket:"charcoal"}[st] || "grey", img:"img/items/tpl-" + st + ".jpg"}))
+  /* Real photos for each colour button */
+  .concat([["gloves",["black","brown","tan","grey","navy"]], ["socks",["black","charcoal","grey","navy","white"]], ["scarf",["grey","navy","black","camel","burgundy"]]]
+    .flatMap(([st, tones]) => tones.map(t => ({style:st, tone:t, img:"img/items/tpl-" + st + "-" + t + ".jpg"}))));
 /* Best template to recolour for each type (mid tones keep the folds visible) */
 const TEMPLATE_BASE = {tee:"grey-tee", shirt:"navy-shirt", hoodie:"red-hoodie", jeans:"blue-jeans", trousers:"grey-trousers",
   chinos:"beige-chinos", sneakers:"black-sneakers", boots:"tan-suede-boots", loafers:"brown-loafers", cap:"beige-cap", scarf:"grey-wool-scarf",
@@ -100,7 +104,7 @@ async function recolour(src, tone){
   for(let i = 0; i < S * S; i++) if(m[i] === 1){ const l = lum(i); n++; sum += l; sq += l * l; }
   if(!n) return c.toDataURL("image/jpeg", .86);
   const mean = sum / n, sd = Math.max(Math.sqrt(sq / n - mean * mean), .03);
-  const t = hexRgb(TONES[tone].hex).map(v => v / 255);
+  const t = hexRgb(TONES[tone] ? TONES[tone].hex : tone).map(v => v / 255);   // a colour name or a #hex
   for(let i = 0; i < S * S; i++){
     if(!m[i]) continue;
     let k = Math.max(-.42, Math.min(.42, (lum(i) - mean) / sd * .12));
@@ -116,14 +120,19 @@ async function recolour(src, tone){
 
 /* Clean studio picture for a type and colour. Resolves to an image URL. */
 const cleanCache = {};
-function cleanPicture(style, tone){
-  const key = style + "|" + tone;
+function cleanPicture(style, tone, hex){
+  const key = style + "|" + (hex || tone);
   if(cleanCache[key]) return cleanCache[key];
   return cleanCache[key] = (async () => {
     const all = studioPhotos();
     let st = style, list = all.filter(p => p.style === st);
     if(!list.length && TEMPLATE_SIMILAR[style]){ st = TEMPLATE_SIMILAR[style]; list = all.filter(p => p.style === st); }
     if(!list.length) return null;
+    if(hex){   // colour picker: tint the real photo whose colour is closest
+      const lab = toLab(hexRgb(hex));
+      const near = [...list].sort((a, b) => labDist(lab, toLab(hexRgb(TONES[a.tone].hex))) - labDist(lab, toLab(hexRgb(TONES[b.tone].hex))))[0];
+      return recolour(near.img, hex);
+    }
     const exact = list.find(p => p.tone === tone);
     if(exact) return exact.img;
     if(NO_RECOLOUR.includes(style)) return [...list].sort((a, b) => toneDistance(a.tone, tone) - toneDistance(b.tone, tone))[0].img;

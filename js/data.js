@@ -19,8 +19,18 @@ const TONES = {
   burgundy:  {name:"Burgundy",   hex:"#6b1f2e", dark:true},
   yellow:    {name:"Yellow",     hex:"#e3bf3a", light:true},
   orange:    {name:"Orange",     hex:"#d9762b"},
-  purple:    {name:"Purple",     hex:"#5e3f86"}
+  purple:    {name:"Purple",     hex:"#5e3f86"},
+  tan:       {name:"Tan",        hex:"#a8774a", neutral:true},
+  camel:     {name:"Camel",      hex:"#b88a5a", neutral:true}
 };
+/* Colour buttons per category. Shirts and pants show the full list; others show their top colours + a colour picker. */
+const PALETTE_DEFAULT = ["white","black","grey","charcoal","navy","beige","cream","blue","lightblue","olive","brown","red","burgundy","green","pink","yellow","orange","purple","silver","gold"];
+const COLOURS_FOR = {
+  gloves:  ["black","brown","tan","grey","navy"],
+  socks:   ["black","charcoal","grey","navy","white"],
+  scarves: ["grey","navy","black","camel","burgundy"]
+};
+const COLOUR_LABEL = {gloves:{brown:"Dark brown"}};
 
 /* formal: 0 = casual, 1 = smart casual, 2 = formal */
 const STYLES = {
@@ -67,13 +77,19 @@ const GROUPS = [
 function groupOf(item){
   return GROUPS.find(g => g.styles.includes(item.style)) || GROUPS.find(g => g.cat === item.cat) || GROUPS[0];
 }
-const MATERIALS = ["Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Corduroy","Fleece","Nylon","Velvet","Tweed","Flannel","Jersey","Knit","Rubber","Mesh","Down","Faux leather","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate","Plastic"];
+const MATERIALS = ["Wool knit","Merino wool","Bamboo","Nylon blend","Acrylic","Cotton","Denim","Wool","Linen","Polyester","Leather","Suede","Canvas","Silk","Satin","Cashmere","Corduroy","Fleece","Nylon","Velvet","Tweed","Flannel","Jersey","Knit","Rubber","Mesh","Down","Faux leather","Stainless steel","Sterling silver","Gold-plated","Metal","Acetate","Plastic"];
 /* Materials shown first for each slot when you add a piece */
 const MATERIALS_FOR = {
   top:["Cotton","Linen","Wool","Knit","Fleece","Jersey","Flannel","Denim","Polyester","Leather","Nylon","Down","Cashmere","Silk","Corduroy","Velvet","Tweed"],
   bottom:["Cotton","Denim","Wool","Linen","Polyester","Corduroy","Fleece","Nylon","Leather"],
   shoes:["Leather","Suede","Canvas","Rubber","Mesh","Faux leather","Nylon"],
   acc:["Leather","Stainless steel","Metal","Sterling silver","Gold-plated","Acetate","Plastic","Wool","Cashmere","Cotton","Silk","Satin","Knit","Velvet","Polyester"]
+};
+/* Categories with a short, researched material list (only these are shown) */
+const MATERIALS_BY_GROUP = {
+  gloves:  ["Leather","Suede","Wool knit","Cashmere","Fleece"],
+  socks:   ["Cotton","Merino wool","Bamboo","Nylon blend","Polyester"],
+  scarves: ["Wool","Cashmere","Acrylic","Cotton","Silk"]
 };
 /* Size buttons for each slot */
 const SIZE_CHIPS = {
